@@ -392,29 +392,6 @@ export const countryComparisons: CountryComparison[] = [
 		]
 	},
 	{
-		country: 'Europa (2022)',
-		flag: '🇪🇺',
-		mechanism: 'Rebajas temporales de impuestos',
-		type: 'Recortes impositivos de emergencia',
-		autoOrDiscretionary: 'Emergencia/temporal',
-		maxAdjustment: 'Variable por país',
-		fiscalSustainability: 'Buena (temporal)',
-		socialTargeting: 'No (universal)',
-		rating: 'success',
-		description: 'Múltiples países europeos aplicaron recortes temporales de impuestos a combustibles tras la invasión de Ucrania. Francia: €0.15/L; España: €0.20/L; Alemania: recorte de impuesto especial.',
-		details: [
-			'Pass-through a consumidores del 101% en Suecia (consumidores recibieron más que el recorte completo)',
-			'Las medidas fueron temporales y acotadas fiscalmente',
-			'Un estudio de Nature Energy encontró que los recortes parcialmente beneficiaron a Rusia al sostener la demanda',
-			'La naturaleza temporal fue clave para la sostenibilidad fiscal'
-		],
-		sources: [
-			{ name: 'Euronews', url: 'https://www.euronews.com/green/2022/03/16/from-tax-cuts-to-speed-limits-how-european-governments-are-trying-to-are-trying-to-cut-fue' },
-			{ name: 'Nature Energy', url: 'https://www.nature.com/articles/s41560-022-01122-6' },
-			{ name: 'ScienceDirect - Pass-through', url: 'https://www.sciencedirect.com/science/article/abs/pii/S0301421523004184' }
-		]
-	},
-	{
 		country: 'Indonesia (2014)',
 		flag: '🇮🇩',
 		mechanism: 'Reforma gradual + transferencias',
@@ -482,95 +459,6 @@ export const countryComparisons: CountryComparison[] = [
 			{ name: 'CFR - Venezuela Rise and Fall', url: 'https://www.cfr.org/backgrounders/venezuela-crisis' }
 		]
 	},
-	{
-		country: 'Nigeria (2023)',
-		flag: '🇳🇬',
-		mechanism: 'Eliminación abrupta de subsidio',
-		type: 'Shock de precio',
-		autoOrDiscretionary: 'Puntual',
-		maxAdjustment: '165-181% de un día para otro',
-		fiscalSustainability: 'Mejoró, pero costo social devastador',
-		socialTargeting: 'Ninguna implementada',
-		rating: 'failed',
-		description: 'El presidente Tinubu eliminó todos los subsidios de golpe el 31 de mayo de 2023. Precio subió de N185 a N617/litro instantáneamente.',
-		details: [
-			'Costos de transporte subieron ~300%',
-			'Banco Mundial proyectó que 4 de cada 10 nigerianos caerían bajo la línea de pobreza a fines de 2024',
-			'73% de encuestados dijo que la eliminación aumentó sus gastos',
-			'Sin transferencias monetarias ni redes de protección social previas o simultáneas'
-		],
-		sources: [
-			{ name: 'The Conversation', url: 'https://theconversation.com/nigerias-fuel-subsidy-removal-was-too-sudden-why-a-gradual-approach-would-have-been-better-222224' },
-			{ name: 'Al Jazeera', url: 'https://www.aljazeera.com/news/2023/5/31/nigeria-fuel-subsidy-cut-spiralling-costs-all-you-need-to-know' }
-		]
-	},
-	{
-		country: 'Ecuador (2019)',
-		flag: '🇪🇨',
-		mechanism: 'Eliminación abrupta de subsidio (3 intentos)',
-		type: 'Shock de precio',
-		autoOrDiscretionary: 'Puntual',
-		maxAdjustment: '25-100%+ de un día para otro',
-		fiscalSustainability: 'N/A (revertido cada vez)',
-		socialTargeting: 'Ninguna entregada',
-		rating: 'failed',
-		description: 'Tres intentos de eliminar subsidios (2019, 2022, 2025), los tres generaron protestas masivas y fueron revertidos.',
-		details: [
-			'2019: Gasolina +25%, diésel duplicado. 12 días de protestas violentas, 7 muertos, gobierno huyó de Quito',
-			'2022: Nuevo intento casi derrocó al presidente Lasso',
-			'2025: Eliminación del subsidio al diésel generó nuevo "Paro Nacional"',
-			'Expertos: faltó gradualidad, compensación y consulta'
-		],
-		sources: [
-			{ name: 'NPR', url: 'https://www.npr.org/2019/10/14/770104729/ecuador-reaches-fuel-subsidy-deal-to-end-violent-protests' },
-			{ name: 'IISD', url: 'https://www.iisd.org/articles/lesson-ecuador-fossil-fuel-subsidies' }
-		]
-	},
-	{
-		country: 'Irán (2019)',
-		flag: '🇮🇷',
-		mechanism: 'Alza abrupta de precios',
-		type: 'Shock de precio',
-		autoOrDiscretionary: 'Puntual',
-		maxAdjustment: '50-300% overnight',
-		fiscalSustainability: 'N/A (protestas)',
-		socialTargeting: 'Prometida pero no entregada previamente',
-		rating: 'failed',
-		description: 'Alza de 50% en primeros 60 litros y 300% en exceso, anunciada a medianoche sin aviso previo. Generó las protestas más violentas desde la Revolución de 1979.',
-		details: [
-			'Protestas en más de 100 ciudades en horas',
-			'Entre 304 y 1.500 muertos (Amnistía Internacional / Reuters)',
-			'7.000 detenidos',
-			'Apagón total de internet por 6 días',
-			'El gobierno no volvió a subir precios por 6 años'
-		],
-		sources: [
-			{ name: 'Wikipedia - 2019 Iranian Protests', url: 'https://en.wikipedia.org/wiki/2019%E2%80%932020_Iranian_protests' },
-			{ name: 'Human Rights Watch', url: 'https://www.hrw.org/news/2020/11/17/iran-no-justice-bloody-2019-crackdown' }
-		]
-	},
-	{
-		country: 'Argentina',
-		flag: '🇦🇷',
-		mechanism: 'Congelamiento de precios',
-		type: 'Control rígido de precios',
-		autoOrDiscretionary: 'Discrecional',
-		maxAdjustment: '0% (congelamiento)',
-		fiscalSustainability: 'Pobre (genera desabastecimiento)',
-		socialTargeting: 'No',
-		rating: 'failed',
-		description: 'Precio fijo del petróleo doméstico en US$56/barril (vs US$86 internacional) y congelamiento de precios al consumidor.',
-		details: [
-			'"La escasez de combustible más aguda en años" con estaciones vacías y colas de horas',
-			'Empresas vendían en bomba por debajo del precio de compra',
-			'120.000 m³ de combustible importado varado en el mar por falta de dólares',
-			'Cuando el control se rompió, alzas de 7.6-9.6% en un solo día'
-		],
-		sources: [
-			{ name: 'OilPrice.com', url: 'https://oilprice.com/Energy/Gas-Prices/Argentinas-Energy-Crisis-Escalates-As-Fuel-Prices-Skyrocket.html' },
-			{ name: 'Real Instituto Elcano', url: 'https://www.realinstitutoelcano.org/en/analyses/unravelling-argentinas-economic-maze-raising-prices-to-stop-inflation/' }
-		]
-	}
 ];
 
 // ============================================================
@@ -622,13 +510,6 @@ export const mainSources = [
 		{ name: 'World Bank - Indonesia Reforms', url: 'https://documents1.worldbank.org/curated/en/099748505212431959/pdf/IDU1e31e5e531f16114baa1b62c1b3201c9c2e68.pdf' },
 		{ name: 'IMF - Automatic Fuel Pricing', url: 'https://www.elibrary.imf.org/view/journals/005/2012/003/article-A001-en.xml' },
 		{ name: 'IDB - Fuel Price Stabilization', url: 'https://publications.iadb.org/en/proposed-fuel-price-stabilization-mechanism-through-use-financial-derivatives' }
-	]},
-	{ category: 'Casos Fallidos', sources: [
-		{ name: 'CFR - Venezuela Petrostate', url: 'https://www.cfr.org/backgrounders/venezuela-crisis' },
-		{ name: 'The Conversation - Nigeria', url: 'https://theconversation.com/nigerias-fuel-subsidy-removal-was-too-sudden-why-a-gradual-approach-would-have-been-better-222224' },
-		{ name: 'NPR - Ecuador 2019', url: 'https://www.npr.org/2019/10/14/770104729/ecuador-reaches-fuel-subsidy-deal-to-end-violent-protests' },
-		{ name: 'Wikipedia - Iran Protests 2019', url: 'https://en.wikipedia.org/wiki/2019%E2%80%932020_Iranian_protests' },
-		{ name: 'OilPrice - Argentina', url: 'https://oilprice.com/Energy/Gas-Prices/Argentinas-Energy-Crisis-Escalates-As-Fuel-Prices-Skyrocket.html' }
 	]},
 	{ category: 'Análisis Fiscal Detallado', sources: [
 		{ name: 'La Tercera - Costo fiscal US$2.000M', url: 'https://www.latercera.com/pulso/noticia/costo-fiscal-del-mepco-supera-los-us2000-millones-desde-su-creacion-en-2014/' },
@@ -784,123 +665,6 @@ export const indonesiaDeepDive = {
 };
 
 // ============================================================
-// ESTIMACIÓN DE RECUPERACIÓN FISCAL (SIMULACIÓN IA)
-// ============================================================
-// ADVERTENCIA: Las siguientes son estimaciones realizadas con
-// inteligencia artificial basadas en datos históricos reales.
-// NO son proyecciones oficiales de ninguna institución.
-// ============================================================
-
-export const recoveryEstimation = {
-	disclaimer: 'IMPORTANTE: Las siguientes son estimaciones realizadas con inteligencia artificial, basadas en datos históricos reales del MEPCO. NO son proyecciones oficiales de ninguna institución gubernamental ni académica. Los escenarios son ilustrativos y dependen de supuestos que pueden no cumplirse.',
-
-	// Datos base para la estimación
-	baseData: {
-		currentDeficit: -2194, // millones USD acumulado a mar 2026
-		projectedQ12026: -1600, // millones USD estimado Q1 2026 completo (Fastcheck)
-		potentialTotalDeficit: -3794, // si se suma Q1 2026 al acumulado pre-2026
-		normalYearsAvgSurplus: 97, // millones USD promedio en años sin crisis
-		goodYearsAvgSurplus: 223, // promedio 2019, 2020, 2023-2025
-		postUkraineRecovery: { years: 3, recovered: 603 }, // 2023+2024+2025
-		annualRecoveryRate2023_2025: 201, // promedio anual post-2022
-		chileGDP: 347000, // millones USD (2025 est.)
-		source: 'Cálculo propio basado en datos OCEC-UDP / La Tercera / Fastcheck',
-		sourceUrl: 'https://www.latercera.com/pulso/noticia/costo-fiscal-del-mepco-supera-los-us2000-millones-desde-su-creacion-en-2014/'
-	},
-
-	scenarios: [
-		{
-			name: 'Escenario Conservador',
-			emoji: '🐢',
-			description: 'Recuperación al ritmo promedio histórico de años normales (~US$97M/año). Sin reformas, ajustes graduales mínimos.',
-			annualSurplus: 97,
-			yearsToRecoverCurrent: 23, // 2194 / 97
-			yearsToRecoverWorst: 39, // 3794 / 97
-			assumptions: [
-				'Petróleo se estabiliza entre US$70-85/barril',
-				'Sin crisis geopolíticas adicionales',
-				'Ventana de cálculo vuelve a parámetros anteriores',
-				'Ajustes de 2.4% máximo por ciclo (21 días)',
-				'Sin reformas estructurales al MEPCO'
-			],
-			color: '#f59e0b'
-		},
-		{
-			name: 'Escenario Moderado',
-			emoji: '🚶',
-			description: 'Recuperación al ritmo post-Ucrania (~US$201M/año promedio 2023-2025). Ajustes graduales con ventana de cálculo intermedia.',
-			annualSurplus: 201,
-			yearsToRecoverCurrent: 11, // 2194 / 201
-			yearsToRecoverWorst: 19, // 3794 / 201
-			assumptions: [
-				'Petróleo baja a US$65-75/barril',
-				'Ventana de cálculo en 8-12 semanas (intermedia)',
-				'Alza máxima se mantiene en 2.4% por ciclo',
-				'Economía chilena crece ~2-3% anual',
-				'Consumo de combustibles estable o creciente'
-			],
-			color: '#3b82f6'
-		},
-		{
-			name: 'Escenario Optimista',
-			emoji: '🏃',
-			description: 'Recuperación acelerada tipo 2020 o 2023 (~US$400M/año). Caída fuerte del petróleo + ventana corta que permite recaudar más.',
-			annualSurplus: 400,
-			yearsToRecoverCurrent: 6, // 2194 / 400
-			yearsToRecoverWorst: 10, // 3794 / 400
-			assumptions: [
-				'Petróleo cae bajo US$60/barril (como en 2020)',
-				'Ventana de cálculo se mantiene en 4 semanas',
-				'El componente variable genera recaudación neta alta',
-				'Consumo de combustibles se mantiene estable',
-				'Sin nuevos shocks geopolíticos'
-			],
-			color: '#10b981'
-		},
-		{
-			name: 'Escenario Gradual Suave',
-			emoji: '🧘',
-			description: 'Alternativa al shock del gobierno: alzas de ~1% cada 21 días en vez del 34% de golpe. Más lento pero sin shock social.',
-			annualSurplus: 150,
-			yearsToRecoverCurrent: 15, // 2194 / 150
-			yearsToRecoverWorst: 25, // 3794 / 150
-			assumptions: [
-				'Ajustes de ~1% cada 21 días (~$13/litro)',
-				'Ventana de cálculo de 10-12 semanas',
-				'Mayor costo fiscal a corto plazo, menor impacto social',
-				'Petróleo en rango US$75-90/barril',
-				'Sin eliminación del mecanismo'
-			],
-			color: '#8b5cf6'
-		}
-	],
-
-	// Datos para graficar la simulación
-	projectionData: {
-		years: [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045],
-		conservative: [-3794, -3697, -3600, -3503, -3406, -3309, -3212, -3115, -3018, -2921, -2824, -2727, -2630, -2533, -2436, -2339, -2242, -2145, -2048, -1951],
-		moderate: [-3794, -3593, -3392, -3191, -2990, -2789, -2588, -2387, -2186, -1985, -1784, -1583, -1382, -1181, -980, -779, -578, -377, -176, 25],
-		optimistic: [-3794, -3394, -2994, -2594, -2194, -1794, -1394, -994, -594, -194, 206, 606, 1006, 1406, 1806, 2206, 2606, 3006, 3406, 3806],
-		gradual: [-3794, -3644, -3494, -3344, -3194, -3044, -2894, -2744, -2594, -2444, -2294, -2144, -1994, -1844, -1694, -1544, -1394, -1244, -1094, -944]
-	},
-
-	alternativeApproach: {
-		title: '¿Y si el gobierno hubiera sido más gradual en marzo 2026?',
-		description: 'En vez del alza de +$370/litro de un día para otro (DS 103 Exento), una alternativa habría sido:',
-		steps: [
-			{ action: 'Semana 1-3: Cambiar ventana a 12 semanas (no 4)', impact: 'Alza de ~$80-100/litro en gasolina. Impacto fiscal: ~US$100M/semana (vs US$200M)' },
-			{ action: 'Semana 4-6: Reducir ventana a 8 semanas', impact: 'Alza adicional de ~$60-80/litro. Total acumulado: ~$160-180/litro' },
-			{ action: 'Semana 7-12: Reducir ventana a 6 semanas', impact: 'Ajuste final gradual hasta alcanzar equilibrio. Total: ~$250-300/litro' },
-			{ action: 'Mes 4+: Evaluar y ajustar según precio del petróleo', impact: 'Si el petróleo baja, los consumidores ven alivio más rápido' }
-		],
-		tradeoff: 'Esta alternativa habría costado ~US$400-600M adicionales al fisco en 3 meses, pero habría evitado el shock del 34% de un día. El debate es si el fisco puede permitirse esa diferencia a cambio de estabilidad social.',
-		note: 'Esta es una estimación ilustrativa. No considera factores como elasticidad de demanda, tipo de cambio, ni decisiones políticas.',
-		source: 'Estimación propia basada en datos históricos del MEPCO',
-		sourceUrl: 'https://www.latercera.com/pulso/noticia/costo-fiscal-del-mepco-supera-los-us2000-millones-desde-su-creacion-en-2014/'
-	}
-};
-
-// ============================================================
 // ANÁLISIS DE LAS MEDIDAS DEL GOBIERNO
 // ============================================================
 
@@ -937,13 +701,6 @@ export const governmentAnalysis = {
 			{ name: 'La Tercera', url: 'https://www.latercera.com/pulso/noticia/gobierno-anuncia-historicas-alzas-de-bencina-y-diesel-por-guerra-en-iran-y-activa-plan-de-medidas-paliativas/' }
 		]
 	},
-
-	inflationImpact: [
-		{ economist: 'Carlos Smith (CIES-UDD)', withMepco: '~2.5% anual', withoutMepco: '~4% anual' },
-		{ economist: 'Valentina Apablaza (OCEC-UDP)', withMepco: '2.5% anual', withoutMepco: '~4% anual' },
-		{ economist: 'Rodrigo Montero (U. Autónoma)', withMepco: '3.6-3.7% anual', withoutMepco: 'N/A' }
-	],
-	inflationSource: { name: 'Emol', url: 'https://www.emol.com/noticias/Economia/2026/03/20/1194818/inflacion-combustibles-mepco.html' },
 
 	alternatives: [
 		{ name: 'Ajuste gradual acelerado', proponent: 'Juan Ortiz, OCEC-UDP', description: 'Duplicar el ajuste semanal de $30 a $60/litro, sin cambiar ventana. Reduce presión fiscal gradualmente sin shock.', sourceUrl: 'https://www.emol.com/noticias/Economia/2026/03/20/1194823/ajuste-al-mepco-debate.html' },
@@ -987,12 +744,6 @@ export const governmentAnalysis = {
 		sourceWiki: 'https://en.wikipedia.org/wiki/2026_Strait_of_Hormuz_crisis'
 	},
 
-	otherCountries: [
-		{ country: 'México', flag: '🇲🇽', response: 'Reactivó subsidio al IEPS: 24% en Magna, 62% en Diésel. Absorbe costo fiscalmente. Expertos advierten gasolina podría llegar a 30 pesos/litro.', sourceUrl: 'https://www.elfinanciero.com.mx/economia/2026/03/21/precio-de-la-gasolina-como-quedan-los-estimulos-fiscales-a-los-combustibles/' },
-		{ country: 'Colombia', flag: '🇨🇴', response: 'Petro: "Si es necesario que suba la gasolina, subirá". Subsidio diésel solo para transporte de carga. Recomienda migrar a vehículos eléctricos.', sourceUrl: 'https://www.infobae.com/colombia/2026/03/24/petro-admitio-posible-alza-en-la-gasolina-y-propuso-migrar-a-energia-electrica-ante-presion-fiscal-por-combustibles-si-es-necesario-subira/' },
-		{ country: 'Perú', flag: '🇵🇪', response: 'Crisis dual: shock petrolero + rotura gasoducto Camisea. Gasolina premium salta de S/17 a S/23. Gobierno describe como "peor crisis energética en 20 años".', sourceUrl: 'https://larepublica.pe/economia/2026/03/20/crisis-de-combustible-continua-a-nivel-nacional-el-petroleo-y-la-gasolina-mantienen-precios-elevados-hnews-1780980' },
-		{ country: 'Bolivia', flag: '🇧🇴', response: 'Eliminó subsidios completamente en dic 2025. Gasolina +86%, Diésel +160%. Protestas y bloqueos. Ahorro: ~US$400M en 5 semanas.', sourceUrl: 'https://dfsud.com/america/no-solo-chile-colombia-ecuador-y-bolivia-entre-los-paises-que-han' }
-	]
 };
 
 // ============================================================
@@ -1031,35 +782,6 @@ export const chileIndonesiaHypothetical = {
 
 	hypotheticalPlan: {
 		title: '¿Cómo se vería el "modelo Indonesia" aplicado a Chile?',
-		steps: [
-			{
-				phase: 'Fase 1: Preparación (mes 1-2)',
-				actions: [
-					'Usar el Registro Social de Hogares (17.1M personas, 85.6% cobertura) para identificar hogares vulnerables',
-					'Diseñar transferencia directa mensual al 40% más pobre (~3.6 millones de hogares)',
-					'Preparar congelamiento de tarifas de transporte público',
-					'Comunicar claramente: "el dinero del subsidio irá directamente a los hogares que más lo necesitan"'
-				]
-			},
-			{
-				phase: 'Fase 2: Implementación simultánea (mes 3)',
-				actions: [
-					'Eliminar MEPCO para vehículos particulares',
-					'Mantener MEPCO para transporte público, kerosene y GLP doméstico',
-					'Activar transferencia directa: ~$55.000/mes por hogar del 40% más pobre',
-					'Congelar tarifas RED/Metro por 12 meses'
-				]
-			},
-			{
-				phase: 'Fase 3: Estabilización (mes 4-12)',
-				actions: [
-					'Monitorear impacto inflacionario y ajustar transferencias si es necesario',
-					'Redirigir ahorros fiscales a infraestructura de transporte público',
-					'Evaluar ampliación de flota eléctrica (Chile ya tiene 2.480 buses eléctricos)',
-					'Revisar el Impuesto Específico: ¿debe eliminarse o transformarse?'
-				]
-			}
-		],
 		fiscalMath: {
 			currentMepcoCost: 6000, // millones USD/año al ritmo actual
 			transferCost40Pct: 2400, // millones USD/año (3.6M hogares × $55.000/mes × 12)
