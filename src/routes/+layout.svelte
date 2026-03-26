@@ -5,7 +5,7 @@
 	const siteUrl = 'https://chilemepco.netlify.app';
 	const title = 'MEPCO Chile | Parlamento.ai';
 	const description = 'Documento de investigacion de Parlamento.ai. Como funciona el MEPCO, cuanto ha costado al fisco (US$2.194M), crisis de marzo 2026 y comparacion internacional. Con graficos, tablas y fuentes verificadas.';
-	const image = `${siteUrl}/og-image.png`;
+	const image = `${siteUrl}/og-image.jpg`;
 </script>
 
 <svelte:head>
