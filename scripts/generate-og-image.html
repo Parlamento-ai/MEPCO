@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1200px;
+  height: 630px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #334155 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 80px;
+  position: relative;
+  overflow: hidden;
+}
+/* decorative elements */
+body::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+body::after {
+  content: '';
+  position: absolute;
+  bottom: -150px;
+  left: -100px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.tag {
+  display: inline-block;
+  background: rgba(249,115,22,0.2);
+  border: 1px solid rgba(249,115,22,0.4);
+  color: #fb923c;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+h1 {
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+h1 span { color: #f97316; }
+.subtitle {
+  font-size: 22px;
+  color: #94a3b8;
+  line-height: 1.4;
+  max-width: 900px;
+  margin-bottom: 36px;
+}
+.stats {
+  display: flex;
+  gap: 40px;
+}
+.stat {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 16px 24px;
+}
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.stat-value.red { color: #f87171; }
+.stat-value.green { color: #4ade80; }
+.stat-value.amber { color: #fbbf24; }
+.stat-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.footer {
+  position: absolute;
+  bottom: 30px;
+  left: 80px;
+  right: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-left {
+  font-size: 14px;
+  color: #475569;
+}
+.footer-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-green { background: #4ade80; }
+.dot-orange { background: #fb923c; }
+.dot-red { background: #f87171; }
+.footer-label { font-size: 12px; color: #64748b; }
+</style>
+</head>
+<body>
+  <div class="tag">Datos verificados con fuentes</div>
+  <h1>MEPCO Chile<br/><span>Guia completa</span></h1>
+  <div class="subtitle">
+    Como funciona el mecanismo de estabilizacion de precios de combustibles, cuanto ha costado y que paso en 2022 y 2026.
+  </div>
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value red">-US$2.194M</div>
+      <div class="stat-label">Costo fiscal acumulado</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value green">+US$182M</div>
+      <div class="stat-label">Balance sin guerra Ucrania</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value amber">12 anos</div>
+      <div class="stat-label">de datos analizados</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="footer-left">Graficos interactivos &bull; Comparacion con 8 paises &bull; Fuentes verificadas</div>
+    <div class="footer-right">
+      <span class="dot dot-green"></span>
+      <span class="dot dot-orange"></span>
+      <span class="dot dot-red"></span>
+    </div>
+  </div>
+</body>
+</html>

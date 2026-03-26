@@ -1,0 +1,2412 @@
+<script lang="ts">
+	import ChartCanvas from '$lib/components/ChartCanvas.svelte';
+	import {
+		timeline,
+		fiscalData,
+		fuelPrices,
+		oilPrices,
+		priceComposition,
+		taxComponents,
+		regionalPrices,
+		calculationWindows,
+		countryComparisons,
+		mainSources,
+		fiscalDeepDive,
+		indonesiaDeepDive,
+		recoveryEstimation,
+		governmentAnalysis,
+		chileIndonesiaHypothetical
+	} from '$lib/data/mepco-data';
+
+	let activeSection = $state('hero');
+
+	const sections = [
+		{ id: 'hero', label: 'Inicio' },
+		{ id: 'que-es', label: '¿Qué es?' },
+		{ id: 'historia', label: 'Historia' },
+		{ id: 'como-funciona', label: 'Cómo funciona' },
+		{ id: 'combustibles', label: 'Combustibles' },
+		{ id: 'graficos', label: 'Gráficos' },
+		{ id: 'regiones', label: 'Regiones' },
+		{ id: 'gobierno', label: 'Gobierno' },
+		{ id: 'actualidad', label: 'Actualidad' },
+		{ id: 'internacional', label: 'Internacional' },
+		{ id: 'fiscal', label: 'Costo Fiscal' },
+		{ id: 'indonesia', label: 'Indonesia' },
+		{ id: 'simulacion', label: 'Simulación' },
+		{ id: 'analisis', label: 'Análisis' },
+		{ id: 'chile-indonesia', label: '¿Modelo Indonesia?' },
+		{ id: 'fuentes', label: 'Fuentes' }
+	];
+
+	// Chart Data
+	const fuelPriceChartData = {
+		labels: fuelPrices.map((d) => d.year.toString()),
+		datasets: [
+			{
+				label: 'Gasolina 93 (CLP/L)',
+				data: fuelPrices.map((d) => d.gasolina93),
+				borderColor: '#f97316',
+				backgroundColor: 'rgba(249, 115, 22, 0.1)',
+				fill: true,
+				tension: 0.3
+			},
+			{
+				label: 'Gasolina 97 (CLP/L)',
+				data: fuelPrices.map((d) => d.gasolina97),
+				borderColor: '#ef4444',
+				backgroundColor: 'rgba(239, 68, 68, 0.1)',
+				fill: true,
+				tension: 0.3
+			},
+			{
+				label: 'Diésel (CLP/L)',
+				data: fuelPrices.map((d) => d.diesel),
+				borderColor: '#3b82f6',
+				backgroundColor: 'rgba(59, 130, 246, 0.1)',
+				fill: true,
+				tension: 0.3
+			}
+		]
+	};
+
+	const fuelPriceChartOptions = {
+		plugins: {
+			title: { display: true, text: 'Evolución de Precios de Combustibles en Chile (CLP/litro)', font: { size: 16 } },
+			legend: { position: 'bottom' as const }
+		},
+		scales: {
+			y: { title: { display: true, text: 'CLP por litro' }, beginAtZero: true }
+		}
+	};
+
+	const oilPriceChartData = {
+		labels: oilPrices.map((d) => d.year.toString()),
+		datasets: [
+			{
+				label: 'WTI (USD/barril)',
+				data: oilPrices.map((d) => d.wti),
+				borderColor: '#10b981',
+				backgroundColor: 'rgba(16, 185, 129, 0.1)',
+				fill: true,
+				tension: 0.3
+			},
+			{
+				label: 'Brent (USD/barril)',
+				data: oilPrices.map((d) => d.brent),
+				borderColor: '#8b5cf6',
+				backgroundColor: 'rgba(139, 92, 246, 0.1)',
+				fill: true,
+				tension: 0.3
+			}
+		]
+	};
+
+	const oilPriceChartOptions = {
+		plugins: {
+			title: { display: true, text: 'Precios Internacionales del Petróleo (USD/barril)', font: { size: 16 } },
+			legend: { position: 'bottom' as const }
+		},
+		scales: {
+			y: { title: { display: true, text: 'USD por barril' }, beginAtZero: true }
+		}
+	};
+
+	const fiscalChartData = {
+		labels: fiscalData.map((d) => d.year),
+		datasets: [
+			{
+				label: 'Impacto Fiscal (Millones USD)',
+				data: fiscalData.map((d) => d.amount),
+				backgroundColor: fiscalData.map((d) =>
+					d.amount >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'
+				),
+				borderColor: fiscalData.map((d) =>
+					d.amount >= 0 ? '#10b981' : '#ef4444'
+				),
+				borderWidth: 1
+			}
+		]
+	};
+
+	const fiscalChartOptions = {
+		plugins: {
+			title: { display: true, text: 'Impacto Fiscal Anual del MEPCO (Millones USD)', font: { size: 16 } },
+			subtitle: { display: true, text: 'Positivo = Ingreso fiscal | Negativo = Costo fiscal', font: { size: 12 } },
+			legend: { display: false }
+		},
+		scales: {
+			y: { title: { display: true, text: 'Millones USD' } }
+		}
+	};
+
+	const compositionGas93Data = {
+		labels: ['Impuestos (46%)', 'Precio referencia Maipú (48%)', 'Margen comercial (6%)'],
+		datasets: [{
+			data: [46, 48, 6],
+			backgroundColor: ['#ef4444', '#3b82f6', '#f59e0b'],
+			borderWidth: 2,
+			borderColor: '#ffffff'
+		}]
+	};
+
+	const compositionDieselData = {
+		labels: ['Impuestos (27%)', 'Precio referencia Maipú (63%)', 'Margen comercial (10%)'],
+		datasets: [{
+			data: [27, 63, 10],
+			backgroundColor: ['#ef4444', '#3b82f6', '#f59e0b'],
+			borderWidth: 2,
+			borderColor: '#ffffff'
+		}]
+	};
+
+	const compositionOptions = {
+		plugins: {
+			legend: { position: 'bottom' as const, labels: { font: { size: 11 } } }
+		}
+	};
+
+	// Regional chart
+	const regionalChartData = {
+		labels: regionalPrices.data.map(r => r.region),
+		datasets: [
+			{
+				label: '93 Octanos',
+				data: regionalPrices.data.map(r => r.oct93),
+				backgroundColor: 'rgba(249, 115, 22, 0.8)'
+			},
+			{
+				label: '95 Octanos',
+				data: regionalPrices.data.map(r => r.oct95),
+				backgroundColor: 'rgba(239, 68, 68, 0.8)'
+			},
+			{
+				label: '97 Octanos',
+				data: regionalPrices.data.map(r => r.oct97),
+				backgroundColor: 'rgba(139, 92, 246, 0.8)'
+			}
+		]
+	};
+
+	const regionalChartOptions = {
+		indexAxis: 'y' as const,
+		plugins: {
+			title: { display: true, text: 'Precios por Región - Marzo 2026, Pre-Shock (CLP/L)', font: { size: 16 } },
+			legend: { position: 'bottom' as const }
+		},
+		scales: {
+			x: { title: { display: true, text: 'CLP por litro' }, min: 1100 }
+		}
+	};
+
+	// Fiscal: con vs sin Ucrania
+	const fiscalWithWithoutData = {
+		labels: fiscalData.map(d => d.year),
+		datasets: [
+			{
+				label: 'Balance real',
+				data: fiscalData.map(d => d.amount),
+				backgroundColor: fiscalData.map(d => d.amount >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+				borderWidth: 1
+			},
+			{
+				label: 'Balance SIN guerra Ucrania (2022 = $0)',
+				data: fiscalData.map(d => d.year === '2022' ? 0 : d.amount),
+				backgroundColor: 'rgba(59, 130, 246, 0.5)',
+				borderColor: '#3b82f6',
+				borderWidth: 2
+			}
+		]
+	};
+
+	const fiscalWithWithoutOptions = {
+		plugins: {
+			title: { display: true, text: '¿Qué pasaría sin la guerra de Ucrania?', font: { size: 16 } },
+			subtitle: { display: true, text: 'Azul = balance hipotético sin 2022 | Verde/Rojo = balance real', font: { size: 12 } },
+			legend: { position: 'bottom' as const }
+		},
+		scales: { y: { title: { display: true, text: 'Millones USD' } } }
+	};
+
+	// Acumulado con y sin Ucrania
+	const cumulativeLabels = fiscalData.map(d => d.year);
+	let cumReal = 0;
+	const cumulativeReal = fiscalData.map(d => { cumReal += d.amount; return cumReal; });
+	let cumNoUkraine = 0;
+	const cumulativeNoUkraine = fiscalData.map(d => { cumNoUkraine += (d.year === '2022' ? 0 : d.amount); return cumNoUkraine; });
+
+	const cumulativeChartData = {
+		labels: cumulativeLabels,
+		datasets: [
+			{
+				label: 'Acumulado REAL',
+				data: cumulativeReal,
+				borderColor: '#ef4444',
+				backgroundColor: 'rgba(239, 68, 68, 0.1)',
+				fill: true,
+				tension: 0.3
+			},
+			{
+				label: 'Acumulado SIN guerra Ucrania',
+				data: cumulativeNoUkraine,
+				borderColor: '#3b82f6',
+				backgroundColor: 'rgba(59, 130, 246, 0.1)',
+				fill: true,
+				tension: 0.3,
+				borderDash: [5, 5]
+			}
+		]
+	};
+
+	const cumulativeChartOptions = {
+		plugins: {
+			title: { display: true, text: 'Balance Fiscal Acumulado del MEPCO (Millones USD)', font: { size: 16 } },
+			subtitle: { display: true, text: 'Sin la guerra de Ucrania, el MEPCO habría generado SUPERÁVIT de +US$182M', font: { size: 12 } },
+			legend: { position: 'bottom' as const }
+		},
+		scales: { y: { title: { display: true, text: 'Millones USD acumulados' } } }
+	};
+
+	// ================================================================
+	// DESCOMPOSICIÓN DEL PRECIO DE GASOLINA 93 POR AÑO
+	// ================================================================
+	// UTM promedio anual (CLP) — Fuente: SII valores y fechas
+	const utmByYear: Record<number, number> = {
+		2014: 42300, 2015: 43400, 2016: 44700, 2017: 46000, 2018: 47300,
+		2019: 48600, 2020: 49900, 2021: 51600, 2022: 54600, 2023: 58500,
+		2024: 62000, 2025: 64900
+	};
+	// Tipo de cambio CLP/USD promedio anual — Fuente: Banco Central de Chile
+	const fxByYear: Record<number, number> = {
+		2014: 570, 2015: 654, 2016: 677, 2017: 649, 2018: 640,
+		2019: 703, 2020: 792, 2021: 760, 2022: 873, 2023: 840,
+		2024: 920, 2025: 950
+	};
+
+	const priceDecomposition = fuelPrices
+		.filter(fp => fp.gasolina93 !== null && fp.year >= 2014 && fp.year <= 2025)
+		.map(fp => {
+			const price = fp.gasolina93!;
+			const utm = utmByYear[fp.year]!;
+			const fx = fxByYear[fp.year]!;
+			const brent = oilPrices.find(o => o.year === fp.year)?.brent ?? 0;
+			const fiscal = fiscalData.find(f => f.year === fp.year.toString());
+			const fiscalAmount = fiscal?.amount ?? 0;
+			const fiscalIdx = fiscalData.findIndex(f => f.year === fp.year.toString());
+			const cumulative = fiscalIdx >= 0 ? cumulativeReal[fiscalIdx] : 0;
+
+			// IVA: 19% sobre el precio base → precio × 19 / 119
+			const iva = Math.round(price * 19 / 119);
+			const sinIva = Math.round(price * 100 / 119);
+
+			// IEC base (componente fijo): 6.0 UTM/m³ para gasolina 93 → convertido a CLP/litro
+			const iecBase = Math.round(6.0 * utm / 1000);
+
+			// Efecto MEPCO estimado por litro de gasolina
+			// Gasolina absorbe ~78% del impacto fiscal (ponderado por consumo × tasa IEC vs diésel)
+			// Consumo anual de gasolina en Chile: ~7.000 millones de litros
+			const mepcoPerLiter = Math.round(fiscalAmount * 0.78 * 1e6 * fx / 7e9);
+			// Positivo → MEPCO AUMENTÓ el IEC (sobretasa) → el consumidor pagó más impuesto
+			// Negativo → MEPCO REBAJÓ el IEC (subsidio al impuesto) → el consumidor pagó menos
+
+			const iecEfectivo = iecBase + mepcoPerLiter;
+			const costoYMargen = sinIva - iecEfectivo;
+
+			// ¿Cuánto se subsidió el impuesto? (solo cuando MEPCO fue negativo)
+			const subsidioAlImpuesto = mepcoPerLiter < 0 ? Math.abs(mepcoPerLiter) : 0;
+			// ¿Cuánto sobretasa pagó el consumidor? (solo cuando MEPCO fue positivo)
+			const sobretasaMepco = mepcoPerLiter > 0 ? mepcoPerLiter : 0;
+			// ¿Se subsidió la bencina directamente? (solo si IEC efectivo < 0, tributación negativa)
+			const subsidioAlCombustible = iecEfectivo < 0 ? Math.abs(iecEfectivo) : 0;
+
+			let classification: 'surplus' | 'less_collection' | 'effective_subsidy';
+			if (fiscalAmount > 0) classification = 'surplus';
+			else if (fp.year === 2022) classification = 'effective_subsidy';
+			else classification = 'less_collection';
+
+			return {
+				year: fp.year, brent, precio: price, costoYMargen, iecBase, mepcoPerLiter,
+				iecEfectivo, iva, sinIva, subsidioAlImpuesto, sobretasaMepco, subsidioAlCombustible,
+				fiscalAmount, cumulative, classification
+			};
+		});
+
+	// Gráfico: Composición del precio (stacked bar)
+	const decompositionChartData = {
+		labels: priceDecomposition.map(d => d.year.toString()),
+		datasets: [
+			{
+				label: 'Combustible + Margen',
+				data: priceDecomposition.map(d => d.costoYMargen),
+				backgroundColor: 'rgba(59, 130, 246, 0.8)'
+			},
+			{
+				label: 'IEC efectivo (base + MEPCO)',
+				data: priceDecomposition.map(d => Math.max(0, d.iecEfectivo)),
+				backgroundColor: 'rgba(245, 158, 11, 0.8)'
+			},
+			{
+				label: 'IVA (19%)',
+				data: priceDecomposition.map(d => d.iva),
+				backgroundColor: 'rgba(139, 92, 246, 0.7)'
+			}
+		]
+	};
+
+	const decompositionChartOptions = {
+		plugins: {
+			title: { display: true, text: 'Composición del precio de Gasolina 93 por año (CLP/litro)', font: { size: 16 } },
+			subtitle: { display: true, text: 'Estimación basada en UTM promedio anual, tipo de cambio Banco Central y datos fiscales MEPCO', font: { size: 11 } },
+			legend: { position: 'bottom' as const },
+			tooltip: {
+				callbacks: {
+					afterBody: function(items: any[]) {
+						const idx = items[0]?.dataIndex;
+						if (idx === undefined) return '';
+						const d = priceDecomposition[idx];
+						return `\nIEC base: $${d.iecBase}/L\nEfecto MEPCO: ${d.mepcoPerLiter >= 0 ? '+' : ''}$${d.mepcoPerLiter}/L\nPrecio total: $${d.precio}/L`;
+					}
+				}
+			}
+		},
+		scales: {
+			x: { stacked: true },
+			y: { stacked: true, title: { display: true, text: 'CLP por litro' }, beginAtZero: true }
+		}
+	};
+
+	const fiscalCombinedData = {
+		labels: fiscalData.map(d => d.year),
+		datasets: [
+			{
+				type: 'bar' as const,
+				label: 'Efecto fiscal anual (MM USD)',
+				data: fiscalData.map(d => d.amount),
+				backgroundColor: fiscalData.map(d => {
+					if (d.amount > 0) return 'rgba(16, 185, 129, 0.8)';
+					if (d.year === '2022') return 'rgba(220, 38, 38, 0.8)';
+					return 'rgba(251, 146, 60, 0.8)';
+				}),
+				borderColor: fiscalData.map(d => {
+					if (d.amount > 0) return '#10b981';
+					if (d.year === '2022') return '#dc2626';
+					return '#f97316';
+				}),
+				borderWidth: 1,
+				order: 2
+			},
+			{
+				type: 'line' as const,
+				label: 'Balance acumulado (MM USD)',
+				data: cumulativeReal,
+				borderColor: '#1e3a5f',
+				backgroundColor: 'rgba(30, 58, 95, 0.05)',
+				fill: false,
+				tension: 0.3,
+				pointRadius: 5,
+				pointBackgroundColor: cumulativeReal.map((v: number) => v >= 0 ? '#10b981' : '#ef4444'),
+				pointBorderColor: '#1e3a5f',
+				borderWidth: 2.5,
+				order: 1
+			}
+		]
+	};
+
+	const fiscalCombinedOptions = {
+		plugins: {
+			title: { display: true, text: '¿Subsidio o menor recaudación? Anatomía fiscal del MEPCO', font: { size: 16 } },
+			subtitle: { display: true, text: 'Verde = mayor recaudación | Naranja = menor recaudación | Rojo = subsidio efectivo | Línea = acumulado', font: { size: 11 } },
+			legend: { position: 'bottom' as const }
+		},
+		scales: {
+			y: { title: { display: true, text: 'Millones USD' } }
+		}
+	};
+
+	// Recovery projection chart
+	const recoveryChartData = {
+		labels: recoveryEstimation.projectionData.years.map(y => y.toString()),
+		datasets: [
+			{
+				label: 'Conservador (~US$97M/año)',
+				data: recoveryEstimation.projectionData.conservative,
+				borderColor: '#f59e0b',
+				backgroundColor: 'transparent',
+				borderDash: [5, 5],
+				tension: 0.1,
+				pointRadius: 2
+			},
+			{
+				label: 'Gradual Suave (~US$150M/año)',
+				data: recoveryEstimation.projectionData.gradual,
+				borderColor: '#8b5cf6',
+				backgroundColor: 'transparent',
+				borderDash: [3, 3],
+				tension: 0.1,
+				pointRadius: 2
+			},
+			{
+				label: 'Moderado (~US$201M/año)',
+				data: recoveryEstimation.projectionData.moderate,
+				borderColor: '#3b82f6',
+				backgroundColor: 'rgba(59, 130, 246, 0.05)',
+				fill: true,
+				tension: 0.1,
+				pointRadius: 2
+			},
+			{
+				label: 'Optimista (~US$400M/año)',
+				data: recoveryEstimation.projectionData.optimistic,
+				borderColor: '#10b981',
+				backgroundColor: 'rgba(16, 185, 129, 0.05)',
+				fill: true,
+				tension: 0.1,
+				pointRadius: 2
+			}
+		]
+	};
+
+	const recoveryChartOptions = {
+		plugins: {
+			title: { display: true, text: 'Simulación: Recuperación del Déficit Fiscal del MEPCO', font: { size: 16 } },
+			subtitle: { display: true, text: 'ESTIMACIÓN IA - No es proyección oficial. Línea $0 = equilibrio fiscal.', font: { size: 12, color: '#ef4444' } },
+			legend: { position: 'bottom' as const },
+			annotation: {
+				annotations: {
+					zeroLine: { type: 'line', yMin: 0, yMax: 0, borderColor: '#000', borderWidth: 2, borderDash: [10, 5] }
+				}
+			}
+		},
+		scales: {
+			y: {
+				title: { display: true, text: 'Millones USD (acumulado)' },
+				grid: { color: (ctx: any) => ctx.tick.value === 0 ? '#000' : '#e5e7eb' }
+			}
+		}
+	};
+
+	function getRatingColor(rating: string) {
+		switch (rating) {
+			case 'success': return 'bg-green-100 text-green-800 border-green-300';
+			case 'partial': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+			case 'mixed': return 'bg-blue-100 text-blue-800 border-blue-300';
+			case 'failed': return 'bg-red-100 text-red-800 border-red-300';
+			case 'catastrophic': return 'bg-red-200 text-red-900 border-red-400';
+			default: return 'bg-gray-100 text-gray-800 border-gray-300';
+		}
+	}
+
+	function getRatingLabel(rating: string) {
+		switch (rating) {
+			case 'success': return 'Exitoso';
+			case 'partial': return 'Parcial';
+			case 'mixed': return 'Mixto';
+			case 'failed': return 'Fallido';
+			case 'catastrophic': return 'Catastrófico';
+			default: return rating;
+		}
+	}
+
+	function getTimelineColor(type: string) {
+		switch (type) {
+			case 'creation': return 'bg-green-500';
+			case 'modification': return 'bg-blue-500';
+			case 'crisis': return 'bg-red-500';
+			case 'predecessor': return 'bg-gray-400';
+			default: return 'bg-gray-400';
+		}
+	}
+
+	let mobileMenuOpen = $state(false);
+</script>
+
+<!-- NAVEGACIÓN FIJA -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700">
+	<div class="max-w-7xl mx-auto px-4">
+		<div class="flex items-center justify-between h-14">
+			<a href="#hero" class="text-white font-bold text-lg">MEPCO<span class="text-orange-400">Chile</span></a>
+
+			<button
+				class="lg:hidden text-white p-2"
+				aria-label="Abrir menú de navegación"
+				onclick={() => mobileMenuOpen = !mobileMenuOpen}
+			>
+				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+				</svg>
+			</button>
+
+			<div class="hidden lg:flex items-center gap-1">
+				{#each sections as section}
+					<a
+						href="#{section.id}"
+						class="px-3 py-1.5 text-sm rounded-md transition-colors {activeSection === section.id ? 'bg-orange-500 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-700'}"
+					>
+						{section.label}
+					</a>
+				{/each}
+			</div>
+		</div>
+
+		{#if mobileMenuOpen}
+			<div class="lg:hidden pb-4 grid grid-cols-3 gap-1">
+				{#each sections as section}
+					<a
+						href="#{section.id}"
+						onclick={() => mobileMenuOpen = false}
+						class="px-3 py-2 text-sm rounded-md text-center transition-colors {activeSection === section.id ? 'bg-orange-500 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-700'}"
+					>
+						{section.label}
+					</a>
+				{/each}
+			</div>
+		{/if}
+	</div>
+</nav>
+
+<main class="bg-slate-50" style="font-family: 'Inter', sans-serif;">
+
+<!-- ==================== HERO ==================== -->
+<section id="hero" class="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-orange-900 pt-14">
+	<div class="absolute inset-0 opacity-10">
+		<div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.1&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+	</div>
+	<div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
+		<div class="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-400/30 rounded-full px-4 py-2 mb-8">
+			<div class="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+			<span class="text-orange-300 text-sm font-medium">Actualizado: Marzo 2026</span>
+		</div>
+		<h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+			MEPCO
+		</h1>
+		<p class="text-xl md:text-2xl text-orange-300 font-semibold mb-4">
+			Mecanismo de Estabilización de Precios de los Combustibles
+		</p>
+		<p class="text-lg text-slate-300 max-w-3xl mx-auto mb-12">
+			Guía completa con historia, datos, gráficos y comparación internacional.
+			Todo respaldado por fuentes oficiales verificables.
+		</p>
+
+		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
+			<div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10">
+				<div class="text-3xl font-bold text-orange-400">2014</div>
+				<div class="text-sm text-slate-300">Año de creación</div>
+				<div class="text-xs text-slate-400 mt-1">Ley 20.765</div>
+			</div>
+			<div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10">
+				<div class="text-3xl font-bold text-red-400">-$2.194M</div>
+				<div class="text-sm text-slate-300">Costo fiscal acumulado</div>
+				<div class="text-xs text-slate-400 mt-1">USD (2014-2026)</div>
+			</div>
+			<div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10">
+				<div class="text-3xl font-bold text-green-400">2.4%</div>
+				<div class="text-sm text-slate-300">Alza máxima/ciclo</div>
+				<div class="text-xs text-slate-400 mt-1">Del precio mayorista</div>
+			</div>
+			<div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10">
+				<div class="text-3xl font-bold text-blue-400">4</div>
+				<div class="text-sm text-slate-300">Combustibles cubiertos</div>
+				<div class="text-xs text-slate-400 mt-1">Gasolina, Diésel, GLP, GNC</div>
+			</div>
+		</div>
+
+		<a href="#que-es" class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full font-semibold transition-colors">
+			Explorar
+			<svg class="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+			</svg>
+		</a>
+	</div>
+</section>
+
+<!-- ==================== ¿QUÉ ES EL MEPCO? ==================== -->
+<section id="que-es" class="py-20 bg-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">¿Qué es el MEPCO?</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-8"></div>
+
+		<div class="grid md:grid-cols-2 gap-8 mb-12">
+			<div>
+				<p class="text-lg text-slate-700 mb-4">
+					El <strong>MEPCO</strong> (Mecanismo de Estabilización de Precios de los Combustibles) es un sistema creado por la
+					<strong>Ley N° 20.765</strong>, publicada el <strong>9 de julio de 2014</strong>, que busca suavizar el impacto de
+					las variaciones del precio internacional del petróleo en los precios que pagan los consumidores chilenos.
+				</p>
+				<p class="text-lg text-slate-700 mb-4">
+					<strong>No fija precios</strong>. Opera mediante la modificación del <strong>componente variable</strong> del
+					Impuesto Específico a los Combustibles (IEC, Ley 18.502). Cuando los precios internacionales suben, el impuesto
+					baja (funcionando como subsidio); cuando bajan, el impuesto sube (recuperando recursos fiscales).
+				</p>
+				<p class="text-sm text-slate-500 mt-4">
+					Fuente: <a href="https://www.bcn.cl/leychile/Navegar?idNorma=1064172" target="_blank" rel="noopener" class="text-orange-600 hover:underline">BCN Ley Chile - Ley 20.765</a> |
+					<a href="https://www.hacienda.cl/areas-de-trabajo/politicas-macroeconomicas/mepco" target="_blank" rel="noopener" class="text-orange-600 hover:underline">Ministerio de Hacienda</a>
+				</p>
+			</div>
+			<div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200">
+				<h3 class="text-lg font-bold text-slate-900 mb-4">Principio fundamental</h3>
+				<div class="space-y-4">
+					<div class="flex items-start gap-3">
+						<div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-1">
+							<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+						</div>
+						<div>
+							<div class="font-semibold text-slate-900">Precio internacional SUBE</div>
+							<div class="text-slate-600">El impuesto BAJA (subsidio al consumidor)</div>
+							<div class="text-sm text-red-600">El Estado deja de recaudar</div>
+						</div>
+					</div>
+					<div class="flex items-start gap-3">
+						<div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-1">
+							<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+						</div>
+						<div>
+							<div class="font-semibold text-slate-900">Precio internacional BAJA</div>
+							<div class="text-slate-600">El impuesto SUBE (el Estado recupera)</div>
+							<div class="text-sm text-green-600">Se recomponen recursos fiscales</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Actores institucionales -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">Actores Institucionales</h3>
+		<div class="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
+			{#each [
+				{ name: 'CNE', full: 'Comisión Nacional de Energía', role: 'Determina precios de paridad y referencia semanalmente. Recomienda cambios de parámetros.', color: 'blue' },
+				{ name: 'Hacienda', full: 'Ministerio de Hacienda', role: 'Publica el componente variable por decreto. Tiene poder regulatorio sobre parámetros.', color: 'orange' },
+				{ name: 'ENAP', full: 'Empresa Nacional del Petróleo', role: 'Comercializador mayorista. Incorpora precio de paridad. NO fija precios al consumidor.', color: 'green' },
+				{ name: 'SII', full: 'Servicio de Impuestos Internos', role: 'Publica los componentes base y variable del impuesto para cada combustible.', color: 'purple' },
+				{ name: 'DIPRES', full: 'Dirección de Presupuestos', role: 'Monitorea el impacto fiscal del FEPP y el gasto tributario del MEPCO.', color: 'red' }
+			] as actor}
+				<div class="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:shadow-md transition-shadow">
+					<div class="text-lg font-bold text-slate-900">{actor.name}</div>
+					<div class="text-xs text-slate-500 mb-2">{actor.full}</div>
+					<div class="text-sm text-slate-600">{actor.role}</div>
+				</div>
+			{/each}
+		</div>
+		<p class="text-sm text-slate-500 mt-4">
+			Fuentes: <a href="https://www.cne.cl/en/tarificacion/hidrocarburos/mecanismo-de-estabilizacion-de-precios-de-los-combustibles-mepco/" target="_blank" rel="noopener" class="text-orange-600 hover:underline">CNE</a> |
+			<a href="https://www.enap.cl/estructura-de-precios" target="_blank" rel="noopener" class="text-orange-600 hover:underline">ENAP</a> |
+			<a href="https://www.sii.cl/valores_y_fechas/mepco/mepco2025.htm" target="_blank" rel="noopener" class="text-orange-600 hover:underline">SII</a>
+		</p>
+	</div>
+</section>
+
+<!-- ==================== HISTORIA Y EVOLUCIÓN ==================== -->
+<section id="historia" class="py-20 bg-slate-100">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Historia y Evolución</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-4"></div>
+		<p class="text-slate-600 mb-12 max-w-3xl">Desde el FEPP de 1991 hasta las modificaciones de marzo 2026, el sistema de estabilización ha evolucionado significativamente.</p>
+
+		<!-- Leyenda -->
+		<div class="flex flex-wrap gap-4 mb-8">
+			{#each [
+				{ label: 'Predecesor', color: 'bg-gray-400' },
+				{ label: 'Creación', color: 'bg-green-500' },
+				{ label: 'Modificación', color: 'bg-blue-500' },
+				{ label: 'Crisis', color: 'bg-red-500' }
+			] as item}
+				<div class="flex items-center gap-2">
+					<div class="w-3 h-3 rounded-full {item.color}"></div>
+					<span class="text-sm text-slate-600">{item.label}</span>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Timeline -->
+		<div class="relative">
+			<div class="absolute left-4 md:left-8 top-0 bottom-0 w-0.5 bg-slate-300"></div>
+
+			{#each timeline as event, i}
+				<div class="relative pl-12 md:pl-20 pb-10">
+					<div class="absolute left-2.5 md:left-6.5 top-1 w-4 h-4 rounded-full {getTimelineColor(event.type)} ring-4 ring-white"></div>
+
+					<div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+						<div class="flex flex-wrap items-center gap-3 mb-3">
+							<span class="text-sm font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full">{event.date}</span>
+							<span class="text-sm font-mono text-slate-500 bg-slate-100 px-3 py-1 rounded-full">{event.law}</span>
+						</div>
+						<h3 class="text-xl font-bold text-slate-900 mb-2">{event.title}</h3>
+						<p class="text-slate-600">{event.description}</p>
+						<p class="text-sm text-slate-400 mt-3">
+							Fuente: <a href={event.sourceUrl} target="_blank" rel="noopener" class="text-orange-500 hover:underline">{event.source}</a>
+						</p>
+					</div>
+				</div>
+			{/each}
+		</div>
+	</div>
+</section>
+
+<!-- ==================== CÓMO FUNCIONA ==================== -->
+<section id="como-funciona" class="py-20 bg-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">¿Cómo Funciona el MEPCO?</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-8"></div>
+
+		<!-- Diagrama de flujo visual -->
+		<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-200 mb-12">
+			<h3 class="text-xl font-bold text-slate-900 mb-6 text-center">Proceso de Determinación en 2 Etapas</h3>
+
+			<div class="grid md:grid-cols-2 gap-8">
+				<!-- Etapa 1 -->
+				<div class="bg-white rounded-xl p-6 border-2 border-blue-300">
+					<div class="inline-flex items-center gap-2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold mb-4">
+						ETAPA 1
+					</div>
+					<h4 class="font-bold text-lg text-blue-900 mb-3">CNE - Comisión Nacional de Energía</h4>
+					<ol class="space-y-3 text-slate-700">
+						<li class="flex items-start gap-2">
+							<span class="bg-blue-100 text-blue-700 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+							<span>Calcula el <strong>Precio de Paridad de Importación</strong> basado en cotizaciones de la Costa del Golfo de EE.UU. (USGC)</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="bg-blue-100 text-blue-700 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+							<span>Calcula el <strong>Precio de Referencia</strong> usando crudo Brent + diferencial de refinación + transporte + seguros</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="bg-blue-100 text-blue-700 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+							<span>Define la <strong>banda de ±5%</strong> alrededor del precio de referencia intermedio</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="bg-blue-100 text-blue-700 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+							<span>Si el precio de paridad cae <strong>fuera de la banda</strong>, se activa/ajusta el componente variable</span>
+						</li>
+					</ol>
+				</div>
+
+				<!-- Etapa 2 -->
+				<div class="bg-white rounded-xl p-6 border-2 border-orange-300">
+					<div class="inline-flex items-center gap-2 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold mb-4">
+						ETAPA 2
+					</div>
+					<h4 class="font-bold text-lg text-orange-900 mb-3">Ministerio de Hacienda</h4>
+					<ol class="space-y-3 text-slate-700">
+						<li class="flex items-start gap-2">
+							<span class="bg-orange-100 text-orange-700 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">5</span>
+							<span>Recibe el informe de la CNE con el componente variable calculado</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="bg-orange-100 text-orange-700 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">6</span>
+							<span>Realiza determinaciones adicionales y verifica parámetros</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="bg-orange-100 text-orange-700 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">7</span>
+							<span>Publica el <strong>componente variable definitivo por decreto</strong> "por orden del Presidente"</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="bg-orange-100 text-orange-700 font-bold text-xs w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">8</span>
+							<span>El nuevo componente entra en vigencia en el siguiente período</span>
+						</li>
+					</ol>
+				</div>
+			</div>
+			<p class="text-sm text-slate-500 mt-4 text-center">
+				Fuentes: <a href="https://www.cne.cl/en/tarificacion/hidrocarburos/mecanismo-de-estabilizacion-de-precios-de-los-combustibles-mepco/" target="_blank" rel="noopener" class="text-orange-600 hover:underline">CNE</a> |
+				<a href="https://www.biobiochile.cl/noticias/bbcl-explica/bbcl-explica-notas/2026/03/23/que-es-el-mepco-y-como-ayuda-a-estabilizar-el-precio-de-los-combustibles-en-chile.shtml" target="_blank" rel="noopener" class="text-orange-600 hover:underline">BioBioChile</a>
+			</p>
+		</div>
+
+		<!-- Parámetros clave -->
+		<div class="grid md:grid-cols-3 gap-6 mb-12">
+			<div class="bg-amber-50 rounded-xl p-6 border border-amber-200">
+				<div class="text-3xl font-bold text-amber-700 mb-2">2.4%</div>
+				<div class="font-semibold text-slate-900">Alza máxima por ciclo</div>
+				<div class="text-sm text-slate-600 mt-2">Del precio mayorista. Ej: a $1.300 mayorista, el alza máxima es ~$30/litro</div>
+			</div>
+			<div class="bg-green-50 rounded-xl p-6 border border-green-200">
+				<div class="text-3xl font-bold text-green-700 mb-2">$36/L</div>
+				<div class="font-semibold text-slate-900">Baja máxima por ciclo</div>
+				<div class="text-sm text-slate-600 mt-2">Ampliado desde $27/L por la reforma de 2023 (Ley 21.537)</div>
+			</div>
+			<div class="bg-blue-50 rounded-xl p-6 border border-blue-200">
+				<div class="text-3xl font-bold text-blue-700 mb-2">21 días</div>
+				<div class="font-semibold text-slate-900">Frecuencia de ajuste</div>
+				<div class="text-sm text-slate-600 mt-2">Desde 2023, antes era semanal. Cambio por Ley 21.537</div>
+			</div>
+		</div>
+		<p class="text-sm text-slate-500">
+			Fuente: <a href="https://www.biobiochile.cl/noticias/bbcl-explica/bbcl-explica-notas/2026/03/17/peligra-el-mepco-que-es-y-cual-es-su-rol-en-el-precio-de-los-combustibles-en-chile.shtml" target="_blank" rel="noopener" class="text-orange-600 hover:underline">BioBioChile - Peligra el MEPCO</a>
+		</p>
+
+		<!-- Estructura del IEC -->
+		<h3 class="text-2xl font-bold text-slate-900 mt-12 mb-6">Componentes del Impuesto Específico (IEC)</h3>
+		<div class="overflow-x-auto">
+			<table class="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200">
+				<thead class="bg-slate-800 text-white">
+					<tr>
+						<th class="px-6 py-4 text-left text-sm font-semibold">Combustible</th>
+						<th class="px-6 py-4 text-center text-sm font-semibold">Componente Base (fijo)</th>
+						<th class="px-6 py-4 text-center text-sm font-semibold">Unidad</th>
+						<th class="px-6 py-4 text-center text-sm font-semibold">Componente Variable (MEPCO)</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each taxComponents.base as comp, i}
+						<tr class="{i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}">
+							<td class="px-6 py-3 font-medium text-slate-900">{comp.fuel}</td>
+							<td class="px-6 py-3 text-center font-mono text-slate-700">{comp.base}</td>
+							<td class="px-6 py-3 text-center text-slate-500 text-sm">{comp.unit}</td>
+							<td class="px-6 py-3 text-center text-slate-600 text-sm italic">Fluctúa cada ciclo</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+		<p class="text-sm text-slate-500 mt-3">
+			Fuente: <a href={taxComponents.sourceUrl} target="_blank" rel="noopener" class="text-orange-600 hover:underline">{taxComponents.source}</a>
+		</p>
+	</div>
+</section>
+
+<!-- ==================== COMBUSTIBLES CUBIERTOS ==================== -->
+<section id="combustibles" class="py-20 bg-slate-100">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Combustibles Cubiertos</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-8"></div>
+
+		<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+			{#each [
+				{ name: 'Gasolina Automotriz', detail: '93, 95 y 97 octanos (diferenciados desde 2022)', icon: '&#9981;', color: 'orange' },
+				{ name: 'Petróleo Diésel', detail: 'Para vehículos y transporte de carga', icon: '&#128666;', color: 'blue' },
+				{ name: 'GLP Vehicular', detail: 'Gas Licuado de Petróleo para uso vehicular', icon: '&#128663;', color: 'green' },
+				{ name: 'GNC Vehicular', detail: 'Gas Natural Comprimido para uso vehicular', icon: '&#9978;', color: 'purple' }
+			] as fuel}
+				<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 text-center hover:shadow-md transition-shadow">
+					<div class="text-4xl mb-4">{@html fuel.icon}</div>
+					<h3 class="text-lg font-bold text-slate-900 mb-2">{fuel.name}</h3>
+					<p class="text-sm text-slate-600">{fuel.detail}</p>
+				</div>
+			{/each}
+		</div>
+
+		<div class="bg-amber-50 rounded-xl p-6 border border-amber-200">
+			<h3 class="font-bold text-amber-900 mb-2">No cubierto por MEPCO:</h3>
+			<p class="text-slate-700">
+				El <strong>kerosene doméstico</strong> continúa bajo el antiguo sistema FEPP (Ley 19.030), que es el único combustible que aún cubre.
+			</p>
+			<p class="text-sm text-slate-500 mt-2">
+				Fuente: <a href="https://www.cne.cl/en/tarificacion/hidrocarburos/fondo-de-estabilizacion-de-precios-del-petroleo-fepp/" target="_blank" rel="noopener" class="text-orange-600 hover:underline">CNE - FEPP</a>
+			</p>
+		</div>
+
+		<!-- Ventanas de cálculo -->
+		<h3 class="text-2xl font-bold text-slate-900 mt-12 mb-6">Ventanas de Cálculo del Precio de Paridad</h3>
+		<div class="grid md:grid-cols-2 gap-6">
+			<div class="bg-white rounded-xl p-6 border border-slate-200">
+				<h4 class="font-bold text-slate-500 text-sm uppercase mb-4">Antes del decreto (hasta marzo 2026)</h4>
+				{#each calculationWindows.before as item}
+					<div class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+						<span class="text-slate-700">{item.fuel}</span>
+						<span class="font-bold text-slate-900">{item.weeks} semanas</span>
+					</div>
+				{/each}
+			</div>
+			<div class="bg-orange-50 rounded-xl p-6 border-2 border-orange-300">
+				<h4 class="font-bold text-orange-700 text-sm uppercase mb-4">Después del decreto (desde marzo 2026)</h4>
+				{#each calculationWindows.after as item}
+					<div class="flex justify-between items-center py-2">
+						<span class="text-slate-700">{item.fuel}</span>
+						<span class="font-bold text-orange-700 text-xl">{item.weeks} semanas</span>
+					</div>
+				{/each}
+				<p class="text-sm text-orange-600 mt-4">
+					El precio internacional se refleja mucho más rápido en el precio doméstico.
+				</p>
+			</div>
+		</div>
+		<p class="text-sm text-slate-500 mt-3">
+			Fuente: <a href={calculationWindows.sourceUrl} target="_blank" rel="noopener" class="text-orange-600 hover:underline">{calculationWindows.source}</a>
+		</p>
+	</div>
+</section>
+
+<!-- ==================== GRÁFICOS Y DATOS ==================== -->
+<section id="graficos" class="py-20 bg-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Datos y Gráficos</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-8"></div>
+
+		<!-- Gráfico: Precios de Combustibles -->
+		<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
+			<ChartCanvas type="line" data={fuelPriceChartData} options={fuelPriceChartOptions} height="450px" />
+			<p class="text-sm text-slate-500 mt-4">
+				Fuentes:
+				<a href="https://www.globalpetrolprices.com/Chile/gasoline_prices/" target="_blank" rel="noopener" class="text-orange-600 hover:underline">GlobalPetrolPrices</a> |
+				<a href="https://www.latercera.com/pulso/noticia/consumo-de-combustibles-en-el-pais-cayo-en-2023-por-primera-vez-desde-la-pandemia-por-mayores-precios/YBKNPF3GD5H4BCUT7QFCP5DINE/" target="_blank" rel="noopener" class="text-orange-600 hover:underline">La Tercera</a> |
+				<a href="https://www.emol.com/noticias/Economia/2022/01/04/1042848/bencinas-2021.html" target="_blank" rel="noopener" class="text-orange-600 hover:underline">Emol</a>
+			</p>
+		</div>
+
+		<!-- Gráfico: Precios del Petróleo -->
+		<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
+			<ChartCanvas type="line" data={oilPriceChartData} options={oilPriceChartOptions} height="400px" />
+			<p class="text-sm text-slate-500 mt-4">
+				Fuente: <a href="https://www.eia.gov/dnav/pet/hist/rwtca.htm" target="_blank" rel="noopener" class="text-orange-600 hover:underline">U.S. Energy Information Administration (EIA)</a>
+			</p>
+		</div>
+
+		<!-- Gráfico: Impacto Fiscal -->
+		<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
+			<ChartCanvas type="bar" data={fiscalChartData} options={fiscalChartOptions} height="400px" />
+			<div class="mt-4 bg-red-50 rounded-lg p-4 border border-red-200">
+				<p class="text-sm text-red-800">
+					<strong>Costo fiscal acumulado (jul 2014 - mar 2026): US$2.194 millones.</strong>
+					Excluyendo el shock de 2022 (guerra Rusia-Ucrania), el sistema ha generado ingresos netos para el fisco.
+				</p>
+			</div>
+			<p class="text-sm text-slate-500 mt-3">
+				Fuente: <a href="https://www.latercera.com/pulso/noticia/costo-fiscal-del-mepco-supera-los-us2000-millones-desde-su-creacion-en-2014/" target="_blank" rel="noopener" class="text-orange-600 hover:underline">La Tercera - OCEC UDP</a>
+			</p>
+		</div>
+
+		<!-- Composición del precio -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">Composición del Precio (Q4 2025, por cada $100)</h3>
+		<div class="grid md:grid-cols-2 gap-8 mb-8">
+			<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+				<h4 class="font-bold text-slate-900 mb-4 text-center">Gasolina 93</h4>
+				<ChartCanvas type="doughnut" data={compositionGas93Data} options={compositionOptions} height="300px" />
+			</div>
+			<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+				<h4 class="font-bold text-slate-900 mb-4 text-center">Diésel</h4>
+				<ChartCanvas type="doughnut" data={compositionDieselData} options={compositionOptions} height="300px" />
+			</div>
+		</div>
+		<p class="text-sm text-slate-500">
+			Fuente: <a href={priceComposition.gasolina93.sourceUrl} target="_blank" rel="noopener" class="text-orange-600 hover:underline">{priceComposition.gasolina93.source}</a>
+		</p>
+
+		<!-- Tabla de datos históricos -->
+		<h3 class="text-2xl font-bold text-slate-900 mt-12 mb-6">Tabla: Precios Históricos de Combustibles (CLP/litro)</h3>
+		<div class="overflow-x-auto">
+			<table class="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200">
+				<thead class="bg-slate-800 text-white">
+					<tr>
+						<th class="px-4 py-3 text-left text-sm">Año</th>
+						<th class="px-4 py-3 text-center text-sm">Gasolina 93</th>
+						<th class="px-4 py-3 text-center text-sm">Gasolina 97</th>
+						<th class="px-4 py-3 text-center text-sm">Diésel</th>
+						<th class="px-4 py-3 text-center text-sm">WTI (USD)</th>
+						<th class="px-4 py-3 text-center text-sm">Brent (USD)</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each fuelPrices as fp, i}
+						{@const oil = oilPrices.find(o => o.year === fp.year)}
+						<tr class="{i % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-orange-50 transition-colors">
+							<td class="px-4 py-2 font-bold text-slate-900">{fp.year}</td>
+							<td class="px-4 py-2 text-center font-mono text-orange-700">${fp.gasolina93?.toLocaleString('es-CL')}</td>
+							<td class="px-4 py-2 text-center font-mono text-red-700">${fp.gasolina97?.toLocaleString('es-CL')}</td>
+							<td class="px-4 py-2 text-center font-mono text-blue-700">${fp.diesel?.toLocaleString('es-CL')}</td>
+							<td class="px-4 py-2 text-center font-mono text-green-700">{oil ? `$${oil.wti}` : '-'}</td>
+							<td class="px-4 py-2 text-center font-mono text-purple-700">{oil ? `$${oil.brent}` : '-'}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Tabla de impacto fiscal -->
+		<h3 class="text-2xl font-bold text-slate-900 mt-12 mb-6">Tabla: Impacto Fiscal Anual (Millones USD)</h3>
+		<div class="overflow-x-auto">
+			<table class="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200">
+				<thead class="bg-slate-800 text-white">
+					<tr>
+						<th class="px-4 py-3 text-left text-sm">Año</th>
+						<th class="px-4 py-3 text-center text-sm">Monto (M USD)</th>
+						<th class="px-4 py-3 text-center text-sm">Efecto</th>
+						<th class="px-4 py-3 text-left text-sm">Contexto</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each fiscalData as fd, i}
+						<tr class="{i % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-orange-50 transition-colors">
+							<td class="px-4 py-2 font-bold text-slate-900">{fd.year}</td>
+							<td class="px-4 py-2 text-center font-mono {fd.amount >= 0 ? 'text-green-700' : 'text-red-700'} font-bold">
+								{fd.amount >= 0 ? '+' : ''}{fd.amount.toLocaleString('es-CL')}
+							</td>
+							<td class="px-4 py-2 text-center">
+								<span class="px-2 py-1 rounded-full text-xs font-semibold {fd.amount >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+									{fd.amount >= 0 ? 'Ingreso' : 'Costo'}
+								</span>
+							</td>
+							<td class="px-4 py-2 text-sm text-slate-600">
+								{#if fd.year === '2020'}COVID-19 - caída petróleo
+								{:else if fd.year === '2022'}Guerra Rusia-Ucrania
+								{:else if fd.year === '2021'}Recuperación post-COVID
+								{:else if fd.year === '2014'}Inicio del MEPCO (jul-dic)
+								{:else if fd.year === '2026*'}Crisis Medio Oriente (ene-mar 19)
+								{/if}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>
+
+<!-- ==================== PRECIOS POR REGIÓN ==================== -->
+<section id="regiones" class="py-20 bg-slate-100">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Precios por Región</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-4"></div>
+		<p class="text-slate-600 mb-8">Precios de bencinas por región de Chile, marzo 2026 (antes del shock de precios del 26 de marzo).</p>
+
+		<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
+			<ChartCanvas type="bar" data={regionalChartData} options={regionalChartOptions} height="600px" />
+		</div>
+
+		<div class="overflow-x-auto">
+			<table class="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200">
+				<thead class="bg-slate-800 text-white">
+					<tr>
+						<th class="px-4 py-3 text-left text-sm">Región</th>
+						<th class="px-4 py-3 text-center text-sm">93 Oct</th>
+						<th class="px-4 py-3 text-center text-sm">95 Oct</th>
+						<th class="px-4 py-3 text-center text-sm">97 Oct</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each regionalPrices.data as rp, i}
+						<tr class="{i % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-orange-50 transition-colors">
+							<td class="px-4 py-2 font-medium text-slate-900">{rp.region}</td>
+							<td class="px-4 py-2 text-center font-mono text-orange-700">${rp.oct93.toLocaleString('es-CL')}</td>
+							<td class="px-4 py-2 text-center font-mono text-red-700">${rp.oct95.toLocaleString('es-CL')}</td>
+							<td class="px-4 py-2 text-center font-mono text-purple-700">${rp.oct97.toLocaleString('es-CL')}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+		<p class="text-sm text-slate-500 mt-3">
+			Fuente: <a href={regionalPrices.sourceUrl} target="_blank" rel="noopener" class="text-orange-600 hover:underline">{regionalPrices.source}</a>
+		</p>
+	</div>
+</section>
+
+<!-- ==================== FACULTAD DEL GOBIERNO ==================== -->
+<section id="gobierno" class="py-20 bg-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Facultad del Gobierno: El Reglamento</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-8"></div>
+
+		<div class="grid md:grid-cols-2 gap-8 mb-12">
+			<div>
+				<h3 class="text-xl font-bold text-slate-900 mb-4">Base Legal</h3>
+				<div class="bg-slate-800 rounded-xl p-6 text-slate-200 font-mono text-sm leading-relaxed mb-4">
+					<div class="text-orange-400 mb-2">// Ley 20.765, Art. 2, inciso 7°</div>
+					"El número de semanas para el cálculo del precio de paridad de importación de los combustibles" se determinará <span class="text-green-400 font-bold">mediante reglamento</span>, sin requerir aprobación del Congreso.
+				</div>
+				<p class="text-slate-700 mb-4">
+					Esto significa que el <strong>Poder Ejecutivo</strong>, específicamente el Ministerio de Hacienda, puede modificar
+					un parámetro crítico del MEPCO (la ventana de cálculo del precio de paridad) por <strong>decreto supremo</strong>,
+					sin necesidad de pasar por el Congreso.
+				</p>
+				<p class="text-slate-700 mb-4">
+					El componente variable del IEC se fija por decreto del Ministerio de Hacienda "por orden del Presidente de la República",
+					previo informe de la CNE.
+				</p>
+				<p class="text-sm text-slate-500">
+					Fuente: <a href="https://www.bcn.cl/leychile/Navegar?idNorma=1064172" target="_blank" rel="noopener" class="text-orange-600 hover:underline">BCN - Ley 20.765</a> |
+					<a href="https://www.emol.com/noticias/Economia/2026/03/23/1195109/ajuste-al-mepco.html" target="_blank" rel="noopener" class="text-orange-600 hover:underline">Emol</a>
+				</p>
+			</div>
+
+			<div>
+				<h3 class="text-xl font-bold text-slate-900 mb-4">Ejercicio de esta facultad: Marzo 2026</h3>
+				<div class="bg-red-50 rounded-xl p-6 border border-red-200">
+					<div class="flex items-center gap-2 mb-4">
+						<div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+						<span class="font-bold text-red-800">DS 103 Exento (23 de marzo 2026)</span>
+					</div>
+					<ul class="space-y-3 text-slate-700">
+						<li class="flex items-start gap-2">
+							<span class="text-red-500 font-bold">1.</span>
+							<span>Firmado por el Ministro de Hacienda Jorge Quiroz Castro, por orden del Presidente José Antonio Kast.</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="text-red-500 font-bold">2.</span>
+							<span>Cambió la ventana de cálculo de 21/14/37 semanas a <strong>4 semanas para todos los combustibles</strong>.</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="text-red-500 font-bold">3.</span>
+							<span>Vigente desde el <strong>26 de marzo de 2026</strong>.</span>
+						</li>
+						<li class="flex items-start gap-2">
+							<span class="text-red-500 font-bold">4.</span>
+							<span>Resultado: <strong>Gasolina 93 +$370/L, Diésel +$580/L</strong>.</span>
+						</li>
+					</ul>
+				</div>
+
+				<div class="mt-6 bg-amber-50 rounded-xl p-6 border border-amber-200">
+					<h4 class="font-bold text-amber-900 mb-2">Debate Constitucional</h4>
+					<p class="text-sm text-slate-700 mb-2">
+						La oposición cuestionó la constitucionalidad del decreto. El senador Diego Ibáñez advirtió que evaluarían
+						"presentar un requerimiento al Tribunal Constitucional" si el decreto excede los límites legales del Ejecutivo.
+					</p>
+					<p class="text-sm text-slate-700">
+						El oficialismo defendió la medida: "las crisis se enfrentan con herramientas de crisis".
+					</p>
+					<p class="text-sm text-slate-500 mt-2">
+						Fuentes:
+						<a href="https://radio.uchile.cl/2026/03/22/choque-por-mepco-entre-defensa-oficialista-al-decreto-y-advertencia-opositora-ante-el-tribunal-constitucional/" target="_blank" rel="noopener" class="text-orange-600 hover:underline">Radio U. Chile</a> |
+						<a href="https://www.malaespinacheck.cl/pais/2026/03/23/que-cambios-establece-el-decreto-que-el-gobierno-ingreso-por-el-mepco/" target="_blank" rel="noopener" class="text-orange-600 hover:underline">Mala Espina Check</a>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ==================== SITUACIÓN ACTUAL ==================== -->
+<section id="actualidad" class="py-20 bg-gradient-to-br from-red-900 via-slate-900 to-slate-900 text-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold mb-2">Situación Actual (Marzo 2026)</h2>
+		<div class="w-20 h-1 bg-red-500 mb-8"></div>
+
+		<div class="grid md:grid-cols-3 gap-6 mb-12">
+			<div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/10">
+				<div class="text-sm text-red-300 uppercase font-bold mb-2">Crisis del Petróleo</div>
+				<p class="text-slate-200">
+					Crisis en Medio Oriente disparó precios del petróleo ~34% en una semana, descrito como
+					el alza más pronunciada desde 1985.
+				</p>
+				<p class="text-xs text-slate-400 mt-3">
+					Fuente: <a href="https://www.fastcheck.cl/2026/03/24/este-jueves-chile-vivira-el-mayor-shock-de-precios-en-combustibles-en-36-anos/" target="_blank" rel="noopener" class="text-orange-400 hover:underline">Fastcheck</a>
+				</p>
+			</div>
+			<div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/10">
+				<div class="text-sm text-red-300 uppercase font-bold mb-2">Costo Fiscal Semanal</div>
+				<div class="text-4xl font-black text-red-400 my-2">~US$200M</div>
+				<p class="text-slate-300 text-sm">por semana en subsidio MEPCO durante la crisis.</p>
+				<p class="text-xs text-slate-400 mt-3">
+					Fuente: <a href="https://www.redimin.cl/mepco-en-alerta-hacienda-advierte-gasto-de-us200-millones-semanales-y-acelera-ajuste-por-crisis-del-petroleo/" target="_blank" rel="noopener" class="text-orange-400 hover:underline">Redimin</a>
+				</p>
+			</div>
+			<div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/10">
+				<div class="text-sm text-red-300 uppercase font-bold mb-2">Si se absorbe todo</div>
+				<div class="text-4xl font-black text-red-400 my-2">US$4.000M</div>
+				<p class="text-slate-300 text-sm">costo proyectado total si el Estado absorbe toda la subida.</p>
+				<p class="text-xs text-slate-400 mt-3">
+					Fuente: <a href="https://www.df.cl/economia-y-politica/macro/370-por-litro-en-gasolina-de-93-y-580-en-diesel-combustibles-anotaran" target="_blank" rel="noopener" class="text-orange-400 hover:underline">Diario Financiero</a>
+				</p>
+			</div>
+		</div>
+
+		<!-- Impacto en precios -->
+		<h3 class="text-2xl font-bold mb-6">Impacto en Precios (desde 26 de marzo 2026)</h3>
+		<div class="grid md:grid-cols-2 gap-6 mb-8">
+			<div class="bg-orange-500/20 rounded-xl p-6 border border-orange-400/30">
+				<div class="text-orange-300 text-sm uppercase font-bold mb-2">Gasolina 93</div>
+				<div class="flex items-end gap-4">
+					<div>
+						<div class="text-slate-400 text-sm">Antes</div>
+						<div class="text-2xl font-bold text-white">$1.083</div>
+					</div>
+					<div class="text-3xl text-orange-400">&#8594;</div>
+					<div>
+						<div class="text-slate-400 text-sm">Después</div>
+						<div class="text-2xl font-bold text-orange-300">$1.453</div>
+					</div>
+					<div class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+						+$370/L (+34.2%)
+					</div>
+				</div>
+			</div>
+			<div class="bg-blue-500/20 rounded-xl p-6 border border-blue-400/30">
+				<div class="text-blue-300 text-sm uppercase font-bold mb-2">Diésel</div>
+				<div class="flex items-end gap-4">
+					<div>
+						<div class="text-slate-400 text-sm">Antes</div>
+						<div class="text-2xl font-bold text-white">$831</div>
+					</div>
+					<div class="text-3xl text-blue-400">&#8594;</div>
+					<div>
+						<div class="text-slate-400 text-sm">Después</div>
+						<div class="text-2xl font-bold text-blue-300">$1.411</div>
+					</div>
+					<div class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+						+$580/L (+69.8%)
+					</div>
+				</div>
+			</div>
+		</div>
+		<p class="text-sm text-slate-400">
+			Fuentes:
+			<a href="https://www.cooperativa.cl/noticias/pais/consumidores/combustibles/cambios-al-mepco-bencinas-subiran-370-pesos-y-diesel-tendra-alza-de-580/2026-03-23/203943.html" target="_blank" rel="noopener" class="text-orange-400 hover:underline">Cooperativa</a> |
+			<a href="https://www.fastcheck.cl/2026/03/24/este-jueves-chile-vivira-el-mayor-shock-de-precios-en-combustibles-en-36-anos/" target="_blank" rel="noopener" class="text-orange-400 hover:underline">Fastcheck</a>
+		</p>
+
+		<!-- Q4 2025 contexto -->
+		<div class="mt-12 bg-white/5 rounded-xl p-6 border border-white/10">
+			<h3 class="text-lg font-bold text-slate-200 mb-3">Contexto: Q4 2025</h3>
+			<p class="text-slate-300 text-sm">
+				Antes de la crisis, los precios venían en baja: Gasolina 93 cayó 4.6% en 2025, Gasolina 97 -5.6%,
+				Diésel -3.3%, impulsados por una caída de 14.7% en el Brent. El MEPCO estaba generando ingresos para el fisco
+				(US$114M en 2025 completo).
+			</p>
+			<p class="text-sm text-slate-500 mt-2">
+				Fuente: <a href="https://ocec.udp.cl/proyecto/brujula-macroeconomica-n40-operacion-del-mepco-en-el-cuarto-trimestre-2025-e-inicios-de-2026/" target="_blank" rel="noopener" class="text-orange-400 hover:underline">OCEC UDP - Brújula Macroeconómica N.40</a>
+			</p>
+		</div>
+	</div>
+</section>
+
+<!-- ==================== COMPARACIÓN INTERNACIONAL ==================== -->
+<section id="internacional" class="py-20 bg-slate-100">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Comparación Internacional</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-4"></div>
+		<p class="text-slate-600 mb-8">Mecanismos de estabilización de combustibles alrededor del mundo: éxitos, fracasos y lecciones.</p>
+
+		<!-- Resumen visual -->
+		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+			<div class="bg-green-50 rounded-xl p-4 border border-green-200 text-center">
+				<div class="text-3xl font-bold text-green-700">4</div>
+				<div class="text-sm text-green-800">Exitosos</div>
+			</div>
+			<div class="bg-yellow-50 rounded-xl p-4 border border-yellow-200 text-center">
+				<div class="text-3xl font-bold text-yellow-700">3</div>
+				<div class="text-sm text-yellow-800">Parciales</div>
+			</div>
+			<div class="bg-red-50 rounded-xl p-4 border border-red-200 text-center">
+				<div class="text-3xl font-bold text-red-700">4</div>
+				<div class="text-sm text-red-800">Fallidos</div>
+			</div>
+			<div class="bg-red-100 rounded-xl p-4 border border-red-300 text-center">
+				<div class="text-3xl font-bold text-red-900">1</div>
+				<div class="text-sm text-red-900">Catastrófico</div>
+			</div>
+		</div>
+
+		<!-- Cards de países -->
+		<div class="space-y-6">
+			{#each countryComparisons as country}
+				<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+					<div class="p-6">
+						<div class="flex flex-wrap items-center gap-3 mb-4">
+							<span class="text-3xl">{country.flag}</span>
+							<h3 class="text-xl font-bold text-slate-900">{country.country}</h3>
+							<span class="px-3 py-1 rounded-full text-sm font-bold border {getRatingColor(country.rating)}">
+								{getRatingLabel(country.rating)}
+							</span>
+							<span class="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+								{country.mechanism}
+							</span>
+						</div>
+
+						<p class="text-slate-700 mb-4">{country.description}</p>
+
+						<div class="grid md:grid-cols-2 gap-4 mb-4">
+							<div class="space-y-2">
+								{#each [
+									{ label: 'Tipo', value: country.type },
+									{ label: 'Auto/Discrecional', value: country.autoOrDiscretionary },
+									{ label: 'Ajuste máximo', value: country.maxAdjustment }
+								] as item}
+									<div class="flex gap-2 text-sm">
+										<span class="text-slate-500 font-medium min-w-[120px]">{item.label}:</span>
+										<span class="text-slate-700">{item.value}</span>
+									</div>
+								{/each}
+							</div>
+							<div class="space-y-2">
+								{#each [
+									{ label: 'Sostenibilidad', value: country.fiscalSustainability },
+									{ label: 'Focalización', value: country.socialTargeting }
+								] as item}
+									<div class="flex gap-2 text-sm">
+										<span class="text-slate-500 font-medium min-w-[120px]">{item.label}:</span>
+										<span class="text-slate-700">{item.value}</span>
+									</div>
+								{/each}
+							</div>
+						</div>
+
+						<ul class="space-y-1 mb-4">
+							{#each country.details as detail}
+								<li class="text-sm text-slate-600 flex items-start gap-2">
+									<span class="text-orange-500 mt-1">&#8226;</span>
+									<span>{detail}</span>
+								</li>
+							{/each}
+						</ul>
+
+						<div class="flex flex-wrap gap-2">
+							{#each country.sources as src}
+								<a href={src.url} target="_blank" rel="noopener" class="text-xs text-orange-600 hover:underline bg-orange-50 px-2 py-1 rounded">
+									{src.name}
+								</a>
+							{/each}
+						</div>
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Lecciones clave -->
+		<div class="mt-12 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 text-white">
+			<h3 class="text-2xl font-bold mb-6">Lecciones Clave de la Experiencia Internacional</h3>
+			<div class="grid md:grid-cols-2 gap-6">
+				{#each [
+					{ num: '1', title: 'Mecanismos automáticos > discrecionales', desc: 'Chile (MEPCO), México (IEPS) y Europa funcionan mejor porque siguen reglas predecibles, no decisiones políticas.' },
+					{ num: '2', title: 'Ajustes graduales son críticos', desc: 'El tope de 2.4% de Chile previene los shocks que causaron desastres en Nigeria, Ecuador, Irán y Argentina.' },
+					{ num: '3', title: 'La sostenibilidad fiscal es el talón de Aquiles', desc: 'Colombia (US$19B de déficit) y Perú (colapsando) muestran que incluso buenos diseños acumulan déficits insostenibles.' },
+					{ num: '4', title: 'Los subsidios universales son regresivos', desc: 'El FMI y la evidencia de Colombia muestran que los subsidios no focalizados benefician desproporcionadamente a los más ricos.' },
+					{ num: '5', title: 'Indonesia 2014 es el estándar de oro', desc: 'Aprovechar precios bajos + redes de protección social simultáneas + comunicación clara = reforma exitosa.' },
+					{ num: '6', title: 'Venezuela es la advertencia máxima', desc: 'Subsidios ilimitados sin disciplina fiscal llevan al colapso industrial y desabastecimiento.' }
+				] as lesson}
+					<div class="flex items-start gap-3">
+						<div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+							{lesson.num}
+						</div>
+						<div>
+							<div class="font-bold text-orange-300">{lesson.title}</div>
+							<div class="text-sm text-slate-300">{lesson.desc}</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+			<p class="text-sm text-slate-400 mt-6">
+				Fuentes:
+				<a href="https://www.elibrary.imf.org/view/journals/005/2012/003/article-A001-en.xml" target="_blank" rel="noopener" class="text-orange-400 hover:underline">IMF - Automatic Fuel Pricing</a> |
+				<a href="https://publications.iadb.org/en/proposed-fuel-price-stabilization-mechanism-through-use-financial-derivatives" target="_blank" rel="noopener" class="text-orange-400 hover:underline">BID - Estabilización de Precios</a>
+			</p>
+		</div>
+	</div>
+</section>
+
+<!-- ==================== ANÁLISIS FISCAL DETALLADO ==================== -->
+<section id="fiscal" class="py-20 bg-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Análisis Fiscal en Profundidad</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-4"></div>
+		<p class="text-slate-600 mb-8">El MEPCO ha acumulado un costo fiscal de US$2.194 millones. Pero la historia cambia radicalmente si se separa el efecto de la guerra de Ucrania.</p>
+
+		<!-- Hallazgo clave -->
+		<div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white mb-12">
+			<div class="flex flex-col md:flex-row items-center gap-8">
+				<div class="flex-1">
+					<h3 class="text-2xl font-bold mb-3">El hallazgo clave</h3>
+					<p class="text-lg text-blue-100 mb-4">
+						Si se excluye el año 2022 (guerra Rusia-Ucrania), el MEPCO habría sido <strong class="text-white">SUPERAVITARIO</strong>
+						en <strong class="text-white">+US$182 millones</strong> para el fisco. Todo el déficit acumulado se explica por un solo evento geopolítico.
+					</p>
+					<p class="text-sm text-blue-200">
+						Fuente: Cálculo basado en datos del economista Juan Ortiz, OCEC-UDP, vía
+						<a href="https://www.latercera.com/pulso/noticia/costo-fiscal-del-mepco-supera-los-us2000-millones-desde-su-creacion-en-2014/" target="_blank" rel="noopener" class="text-white underline">La Tercera</a>
+					</p>
+				</div>
+				<div class="flex-shrink-0 text-center">
+					<div class="bg-white/20 rounded-xl p-6">
+						<div class="text-sm text-blue-200">Con Ucrania</div>
+						<div class="text-3xl font-black text-red-300">-US$2.194M</div>
+						<div class="text-2xl text-blue-200 my-2">vs</div>
+						<div class="text-sm text-blue-200">Sin Ucrania</div>
+						<div class="text-3xl font-black text-green-300">+US$182M</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Gráficos comparativos -->
+		<div class="grid lg:grid-cols-1 gap-8 mb-12">
+			<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+				<ChartCanvas type="bar" data={fiscalWithWithoutData} options={fiscalWithWithoutOptions} height="400px" />
+			</div>
+			<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+				<ChartCanvas type="line" data={cumulativeChartData} options={cumulativeChartOptions} height="400px" />
+			</div>
+		</div>
+
+		<!-- ¿Subsidio o menor recaudación? - Análisis detallado -->
+		<div class="mt-12 mb-12" id="subsidio-impuesto">
+			<h3 class="text-2xl font-bold text-slate-900 mb-4">¿El MEPCO subsidia la bencina o subsidia el impuesto?</h3>
+			<div class="bg-amber-50 rounded-xl p-6 border border-amber-200 mb-8">
+				<p class="text-slate-800 mb-3">
+					<strong>Respuesta corta:</strong> El MEPCO no subsidia el precio de la bencina. Opera exclusivamente sobre
+					el <strong>componente variable del Impuesto Específico a los Combustibles (IEC)</strong>.
+					En la mayoría de los años, el Estado simplemente <em>recaudó menos impuesto</em> — o incluso más.
+				</p>
+				<p class="text-slate-800">
+					<strong>La excepción:</strong> En 2022, el componente variable se hizo tan negativo que
+					<strong>superó al componente base del IEC</strong>, generando una <em>tributación efectiva negativa</em>
+					por litro. Solo entonces el MEPCO dejó de ser una "rebaja de impuesto" y se convirtió en un subsidio directo al precio.
+				</p>
+			</div>
+
+			<!-- Gráfico combinado: barras fiscales + línea acumulada -->
+			<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
+				<ChartCanvas type="bar" data={fiscalCombinedData} options={fiscalCombinedOptions} height="450px" />
+				<div class="flex flex-wrap gap-4 mt-4 text-sm justify-center">
+					<span class="flex items-center gap-2">
+						<span class="w-4 h-4 rounded bg-emerald-500 inline-block"></span>
+						Mayor recaudación (Estado ganó)
+					</span>
+					<span class="flex items-center gap-2">
+						<span class="w-4 h-4 rounded bg-orange-400 inline-block"></span>
+						Menor recaudación (rebaja del IEC)
+					</span>
+					<span class="flex items-center gap-2">
+						<span class="w-4 h-4 rounded bg-red-600 inline-block"></span>
+						Subsidio efectivo (superó al impuesto)
+					</span>
+				</div>
+			</div>
+
+			<!-- Gráfico: Composición del precio (stacked bar) -->
+			<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
+				<ChartCanvas type="bar" data={decompositionChartData} options={decompositionChartOptions} height="450px" />
+				<p class="text-xs text-slate-500 mt-3">
+					El IEC efectivo = IEC base (fijo, en UTM/m³) + componente variable MEPCO. Cuando el MEPCO reduce el IEC, la barra naranja se achica.
+					En 2020 (petróleo barato), el MEPCO <em>aumentó</em> el IEC y el Estado recaudó más.
+				</p>
+			</div>
+
+			<!-- Tabla detallada: descomposición del precio por litro -->
+			<h4 class="text-xl font-bold text-slate-900 mb-2">Descomposición del precio de Gasolina 93 (CLP/litro)</h4>
+			<p class="text-sm text-slate-500 mb-4">
+				Estimación por año. IEC base calculado con UTM promedio anual (SII). Efecto MEPCO estimado a partir del impacto fiscal (OCEC-UDP),
+				ponderado por consumo y tipo de cambio (BCCh). Los valores son promedios anuales aproximados.
+			</p>
+			<div class="overflow-x-auto mb-8">
+				<table class="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 text-sm">
+					<thead>
+						<tr class="bg-slate-800 text-white">
+							<th class="px-3 py-3 text-left font-semibold">Año</th>
+							<th class="px-3 py-3 text-right font-semibold">Brent<br/><span class="font-normal text-slate-300">USD/bbl</span></th>
+							<th class="px-3 py-3 text-right font-semibold bg-slate-700">Precio<br/><span class="font-normal text-slate-300">CLP/L</span></th>
+							<th class="px-3 py-3 text-right font-semibold text-blue-200">Combustible<br/>+ Margen</th>
+							<th class="px-3 py-3 text-right font-semibold text-amber-200">IEC base<br/><span class="font-normal text-slate-300">(fijo)</span></th>
+							<th class="px-3 py-3 text-right font-semibold text-amber-200">Efecto<br/>MEPCO</th>
+							<th class="px-3 py-3 text-right font-semibold text-amber-200">IEC<br/>efectivo</th>
+							<th class="px-3 py-3 text-right font-semibold text-purple-200">IVA<br/><span class="font-normal text-slate-300">(19%)</span></th>
+							<th class="px-3 py-3 text-right font-semibold">Subsidio<br/>al IEC</th>
+							<th class="px-3 py-3 text-right font-semibold">Subsidio a<br/>la bencina</th>
+							<th class="px-3 py-3 text-right font-semibold">Fiscal<br/><span class="font-normal text-slate-300">MM USD</span></th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each priceDecomposition as row}
+							<tr class="border-b border-slate-100 hover:bg-slate-50/80 {row.classification === 'effective_subsidy' ? 'bg-red-50' : row.classification === 'surplus' ? 'bg-green-50/30' : ''}">
+								<td class="px-3 py-2.5 font-bold text-slate-900">{row.year}</td>
+								<td class="px-3 py-2.5 text-right font-mono text-slate-600">{row.brent}</td>
+								<td class="px-3 py-2.5 text-right font-mono font-bold bg-slate-50">${row.precio.toLocaleString('es-CL')}</td>
+								<td class="px-3 py-2.5 text-right font-mono text-blue-700">${row.costoYMargen.toLocaleString('es-CL')}</td>
+								<td class="px-3 py-2.5 text-right font-mono text-amber-700">${row.iecBase.toLocaleString('es-CL')}</td>
+								<td class="px-3 py-2.5 text-right font-mono font-bold {row.mepcoPerLiter > 0 ? 'text-red-600' : row.mepcoPerLiter < 0 ? 'text-green-700' : 'text-slate-400'}">
+									{#if row.mepcoPerLiter > 0}
+										+${row.mepcoPerLiter.toLocaleString('es-CL')}
+									{:else if row.mepcoPerLiter < 0}
+										-${Math.abs(row.mepcoPerLiter).toLocaleString('es-CL')}
+									{:else}
+										$0
+									{/if}
+								</td>
+								<td class="px-3 py-2.5 text-right font-mono font-bold {row.iecEfectivo < 0 ? 'text-red-700 bg-red-50' : 'text-amber-800'}">
+									${row.iecEfectivo.toLocaleString('es-CL')}
+								</td>
+								<td class="px-3 py-2.5 text-right font-mono text-purple-700">${row.iva.toLocaleString('es-CL')}</td>
+								<td class="px-3 py-2.5 text-right font-mono {row.subsidioAlImpuesto > 0 ? 'text-orange-700 font-bold' : 'text-slate-300'}">
+									{row.subsidioAlImpuesto > 0 ? '$' + row.subsidioAlImpuesto.toLocaleString('es-CL') : '—'}
+								</td>
+								<td class="px-3 py-2.5 text-right font-mono {row.subsidioAlCombustible > 0 ? 'text-red-700 font-bold' : 'text-slate-300'}">
+									{row.subsidioAlCombustible > 0 ? '$' + row.subsidioAlCombustible.toLocaleString('es-CL') : '—'}
+								</td>
+								<td class="px-3 py-2.5 text-right font-mono font-bold {row.fiscalAmount >= 0 ? 'text-green-700' : 'text-red-700'}">
+									{row.fiscalAmount >= 0 ? '+' : ''}{row.fiscalAmount.toLocaleString('es-CL')}
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Leyenda de la tabla -->
+			<div class="grid md:grid-cols-2 gap-4 mb-8 text-sm">
+				<div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+					<h5 class="font-bold text-slate-800 mb-2">Cómo leer la tabla</h5>
+					<ul class="space-y-1.5 text-slate-600">
+						<li><strong class="text-blue-700">Combustible + Margen</strong> = precio de paridad de importación + margen de distribución y retail</li>
+						<li><strong class="text-amber-700">IEC base</strong> = componente fijo del Impuesto Específico (6,0 UTM/m³ para gasolina 93)</li>
+						<li><strong>Efecto MEPCO</strong> = componente variable del IEC. <span class="text-red-600">Rojo (+) = sobretasa</span>, <span class="text-green-700">verde (-) = rebaja</span></li>
+						<li><strong class="text-amber-800">IEC efectivo</strong> = IEC base + efecto MEPCO = lo que realmente se cobra de impuesto específico</li>
+						<li><strong class="text-purple-700">IVA</strong> = 19% sobre la suma de todo lo anterior</li>
+					</ul>
+				</div>
+				<div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+					<h5 class="font-bold text-slate-800 mb-2">Columnas de subsidio</h5>
+					<ul class="space-y-1.5 text-slate-600">
+						<li><strong class="text-orange-700">Subsidio al IEC</strong> = cuánto se rebajó el impuesto por litro (= |efecto MEPCO| cuando es negativo)</li>
+						<li><strong class="text-red-700">Subsidio a la bencina</strong> = cuánto pagó el Estado <em>por encima</em> del impuesto. Solo aparece cuando el IEC efectivo es negativo (tributación negativa)</li>
+						<li>"—" = no hubo subsidio ese año; el MEPCO <em>aumentó</em> el impuesto</li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Contadores por categoría -->
+			<div class="grid md:grid-cols-3 gap-4 mb-8">
+				<div class="bg-green-50 rounded-xl p-5 border border-green-200 text-center">
+					<div class="text-3xl font-black text-green-700">{priceDecomposition.filter(r => r.classification === 'surplus').length}</div>
+					<div class="text-sm text-green-800 mt-1">años donde el Estado <strong>recaudó más</strong> gracias al MEPCO</div>
+					<div class="text-xs text-green-600 mt-2">El MEPCO fue positivo: el consumidor pagó sobretasa</div>
+				</div>
+				<div class="bg-orange-50 rounded-xl p-5 border border-orange-200 text-center">
+					<div class="text-3xl font-black text-orange-700">{priceDecomposition.filter(r => r.classification === 'less_collection').length}</div>
+					<div class="text-sm text-orange-800 mt-1">años donde el Estado <strong>solo recaudó menos</strong></div>
+					<div class="text-xs text-orange-600 mt-2">El MEPCO fue negativo: se rebajó el IEC, pero el impuesto siguió existiendo</div>
+				</div>
+				<div class="bg-red-50 rounded-xl p-5 border border-red-200 text-center">
+					<div class="text-3xl font-black text-red-700">{priceDecomposition.filter(r => r.classification === 'effective_subsidy').length}</div>
+					<div class="text-sm text-red-800 mt-1">año donde el MEPCO <strong>subsidió la bencina</strong></div>
+					<div class="text-xs text-red-600 mt-2">El subsidio superó al IEC base: tributación efectiva negativa en meses peak</div>
+				</div>
+			</div>
+
+			<!-- Dato clave: julio 2022 -->
+			<div class="bg-slate-900 rounded-xl p-6 text-white mb-8">
+				<h5 class="font-bold text-lg mb-3">Julio 2022: el único momento donde se subsidió la bencina</h5>
+				<div class="grid md:grid-cols-2 gap-6">
+					<div>
+						<div class="text-sm text-slate-400 mb-1">Gasolina 93</div>
+						<div class="flex items-center gap-3">
+							<div class="text-center">
+								<div class="text-xs text-amber-400">IEC base</div>
+								<div class="text-2xl font-mono font-bold text-amber-300">$349/L</div>
+							</div>
+							<div class="text-slate-500">vs</div>
+							<div class="text-center">
+								<div class="text-xs text-red-400">Subsidio MEPCO</div>
+								<div class="text-2xl font-mono font-bold text-red-400">$371/L</div>
+							</div>
+							<div class="text-slate-500">=</div>
+							<div class="text-center">
+								<div class="text-xs text-red-300">IEC efectivo</div>
+								<div class="text-2xl font-mono font-bold text-red-300">-$22/L</div>
+							</div>
+						</div>
+					</div>
+					<div>
+						<div class="text-sm text-slate-400 mb-1">Diésel</div>
+						<div class="flex items-center gap-3">
+							<div class="text-center">
+								<div class="text-xs text-amber-400">IEC base</div>
+								<div class="text-2xl font-mono font-bold text-amber-300">$87/L</div>
+							</div>
+							<div class="text-slate-500">vs</div>
+							<div class="text-center">
+								<div class="text-xs text-red-400">Subsidio MEPCO</div>
+								<div class="text-2xl font-mono font-bold text-red-400">$375/L</div>
+							</div>
+							<div class="text-slate-500">=</div>
+							<div class="text-center">
+								<div class="text-xs text-red-300">IEC efectivo</div>
+								<div class="text-2xl font-mono font-bold text-red-300">-$288/L</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<p class="text-sm text-slate-400 mt-4">
+					Fuente: <a href="https://www.emol.com/noticias/Economia/2022/07/24/1067763/economistas-recaudacion-impuesto-especifico-combustibles.html" target="_blank" rel="noopener" class="text-orange-400 hover:underline">Emol - Recaudación IEC 2022</a>.
+					Estos son datos reales del peak de la crisis, no estimaciones.
+				</p>
+			</div>
+
+			<!-- Conclusión -->
+			<div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+				<h4 class="font-bold text-slate-900 mb-3">Conclusión: ¿perdió plata o recaudó menos?</h4>
+				<p class="text-slate-700 mb-2">
+					<strong>En 11 de 12 años, el MEPCO no ha subsidiado la bencina.</strong> Ha sido un mecanismo de ajuste impositivo:
+					en años de precios bajos, el Estado recauda más IEC (columna "Efecto MEPCO" en rojo); en años de precios altos, recauda menos (en verde).
+					Excluyendo 2022, el balance neto es <strong class="text-green-700">superavitario en +US$182M</strong> para el fisco.
+				</p>
+				<p class="text-slate-700 mb-2">
+					<strong>Solo en 2022</strong>, durante los meses peak de la guerra de Ucrania, el subsidio por litro superó al impuesto base,
+					generando tributación efectiva negativa. Ese único evento explica <strong>el 108% del déficit total acumulado</strong>.
+					En promedio anual, incluso en 2022 el IEC efectivo fue positivo (~$97/L); la tributación negativa fue un fenómeno de meses específicos.
+				</p>
+				<p class="text-slate-600 text-sm mt-3">
+					Fuentes de la tabla: precios de combustibles (GlobalPetrolPrices, La Tercera, Emol); UTM (SII); tipo de cambio (Banco Central de Chile);
+					impacto fiscal (OCEC-UDP vía La Tercera); IEC base (Ley 18.502, 6,0 UTM/m³); datos julio 2022 (Emol).
+				</p>
+			</div>
+		</div>
+
+		<!-- Desglose superávit vs déficit -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">Desglose: Años de superávit vs. años de déficit (sin 2022)</h3>
+		<div class="grid md:grid-cols-2 gap-6 mb-12">
+			<div class="bg-green-50 rounded-xl p-6 border border-green-200">
+				<h4 class="font-bold text-green-800 mb-4 flex items-center gap-2">
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+					Años de superávit (el Estado ganó)
+				</h4>
+				<div class="space-y-2">
+					{#each fiscalDeepDive.withoutUkraine.surplusYears.years as year, i}
+						<div class="flex justify-between items-center py-1 border-b border-green-100 last:border-0">
+							<span class="text-slate-700">{year}</span>
+							<span class="font-bold font-mono text-green-700">+US${fiscalDeepDive.withoutUkraine.surplusYears.amounts[i]}M</span>
+						</div>
+					{/each}
+					<div class="flex justify-between items-center pt-2 border-t-2 border-green-300">
+						<span class="font-bold text-green-900">TOTAL</span>
+						<span class="font-black font-mono text-green-700 text-lg">+US${fiscalDeepDive.withoutUkraine.surplusYears.total.toLocaleString('es-CL')}M</span>
+					</div>
+				</div>
+			</div>
+			<div class="bg-red-50 rounded-xl p-6 border border-red-200">
+				<h4 class="font-bold text-red-800 mb-4 flex items-center gap-2">
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+					Años de déficit (el Estado perdió, sin 2022)
+				</h4>
+				<div class="space-y-2">
+					{#each fiscalDeepDive.withoutUkraine.deficitYears.years as year, i}
+						<div class="flex justify-between items-center py-1 border-b border-red-100 last:border-0">
+							<span class="text-slate-700">{year}</span>
+							<span class="font-bold font-mono text-red-700">US${fiscalDeepDive.withoutUkraine.deficitYears.amounts[i]}M</span>
+						</div>
+					{/each}
+					<div class="flex justify-between items-center pt-2 border-t-2 border-red-300">
+						<span class="font-bold text-red-900">TOTAL</span>
+						<span class="font-black font-mono text-red-700 text-lg">US${fiscalDeepDive.withoutUkraine.deficitYears.total.toLocaleString('es-CL')}M</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Detalle crisis 2022 -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">Anatomía de la Crisis 2022: US$2.376 Millones en un Año</h3>
+		<div class="bg-slate-900 rounded-2xl p-8 text-white mb-12">
+			<div class="relative">
+				<div class="absolute left-4 top-0 bottom-0 w-0.5 bg-red-500/30"></div>
+				{#each fiscalDeepDive.ukraine2022Detail.timelineEvents as event}
+					<div class="relative pl-10 pb-6 last:pb-0">
+						<div class="absolute left-2.5 top-1.5 w-3.5 h-3.5 rounded-full bg-red-500 ring-2 ring-red-500/30"></div>
+						<div class="text-xs font-mono text-red-400 mb-1">{event.date}</div>
+						<div class="text-slate-200">{event.event}</div>
+					</div>
+				{/each}
+			</div>
+			<p class="text-sm text-slate-400 mt-6">
+				Fuentes:
+				<a href="https://www.emol.com/noticias/Economia/2022/07/24/1067763/economistas-recaudacion-impuesto-especifico-combustibles.html" target="_blank" rel="noopener" class="text-orange-400 hover:underline">Emol</a> |
+				<a href="https://www.latercera.com/pulso/noticia/gobierno-inyecta-us1500-millones-al-mepco-para-seguir-estabilizando-los-precios-de-los-combustibles/PNPQEFYUKJHNRJU43BORRSTGEM/" target="_blank" rel="noopener" class="text-orange-400 hover:underline">La Tercera</a>
+			</p>
+		</div>
+
+		<!-- Escala del costo -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">¿Cuánto son US$2.194 millones? Comparaciones de escala</h3>
+		<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+			{#each fiscalDeepDive.scaleComparisons as comp}
+				<div class="bg-slate-50 rounded-xl p-5 border border-slate-200 hover:shadow-md transition-shadow">
+					<div class="text-lg font-bold text-orange-600 mb-1">{comp.equivalent}</div>
+					<div class="text-sm font-semibold text-slate-900 mb-2">{comp.item}</div>
+					<div class="text-xs text-slate-600">{comp.detail}</div>
+					<a href={comp.sourceUrl} target="_blank" rel="noopener" class="text-xs text-orange-500 hover:underline mt-2 inline-block">Fuente</a>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Costos marzo 2026 -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">Costos en la Crisis Actual (Marzo 2026)</h3>
+		<div class="grid md:grid-cols-4 gap-4">
+			<div class="bg-red-50 rounded-xl p-5 border border-red-200 text-center">
+				<div class="text-sm text-red-600 uppercase font-bold">Por semana</div>
+				<div class="text-2xl font-black text-red-700 my-1">US$140-200M</div>
+				<a href="https://www.emol.com/noticias/Economia/2026/03/19/1194747/quiroz-ajuste-mepco.html" target="_blank" rel="noopener" class="text-xs text-orange-500 hover:underline">Emol / Redimin</a>
+			</div>
+			<div class="bg-red-50 rounded-xl p-5 border border-red-200 text-center">
+				<div class="text-sm text-red-600 uppercase font-bold">Por mes</div>
+				<div class="text-2xl font-black text-red-700 my-1">~US$500M</div>
+				<a href="https://fen.uahurtado.cl/2026/noticias/mepco-en-chile-el-amortiguador-de-la-bencina-que-hoy-cuesta-millones-al-mes/" target="_blank" rel="noopener" class="text-xs text-orange-500 hover:underline">FEN UAH</a>
+			</div>
+			<div class="bg-red-50 rounded-xl p-5 border border-red-200 text-center">
+				<div class="text-sm text-red-600 uppercase font-bold">Q1 2026 proyectado</div>
+				<div class="text-2xl font-black text-red-700 my-1">~US$1.600M</div>
+				<a href="https://www.fastcheck.cl/2026/03/24/este-jueves-chile-vivira-el-mayor-shock-de-precios-en-combustibles-en-36-anos/" target="_blank" rel="noopener" class="text-xs text-orange-500 hover:underline">Fastcheck</a>
+			</div>
+			<div class="bg-red-50 rounded-xl p-5 border border-red-200 text-center">
+				<div class="text-sm text-red-600 uppercase font-bold">Anualizado (si sigue)</div>
+				<div class="text-2xl font-black text-red-700 my-1">~US$3.000M</div>
+				<a href="https://www.reporteminero.cl/noticia/noticias/2026/03/mepco-cambios-chile-costo-3000-millones-petroleo" target="_blank" rel="noopener" class="text-xs text-orange-500 hover:underline">Reporte Minero</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ==================== CASO INDONESIA ==================== -->
+<section id="indonesia" class="py-20 bg-gradient-to-br from-emerald-900 via-slate-900 to-slate-900 text-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold mb-2">Caso Indonesia: El Estándar de Oro</h2>
+		<div class="w-20 h-1 bg-emerald-400 mb-4"></div>
+		<p class="text-slate-300 mb-8">La reforma de combustibles de Indonesia en 2014-2015 es considerada por el Banco Mundial, el FMI y el IISD como el mejor ejemplo mundial de cómo reformar subsidios a combustibles.</p>
+
+		<!-- Antes de la reforma -->
+		<div class="bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/10 mb-8">
+			<h3 class="text-2xl font-bold text-emerald-300 mb-4">Antes de la Reforma: El Problema</h3>
+			<div class="grid md:grid-cols-3 gap-6 mb-6">
+				<div class="text-center">
+					<div class="text-4xl font-black text-red-400">{indonesiaDeepDive.preReform.subsidyCostGDP}%</div>
+					<div class="text-sm text-slate-300">del PIB en subsidios a combustibles (2014)</div>
+				</div>
+				<div class="text-center">
+					<div class="text-4xl font-black text-red-400">US$21.000M</div>
+					<div class="text-sm text-slate-300">costo total de subsidios energéticos</div>
+				</div>
+				<div class="text-center">
+					<div class="text-4xl font-black text-red-400">14 intentos</div>
+					<div class="text-sm text-slate-300">de reforma previos (desde 1998)</div>
+				</div>
+			</div>
+			<div class="bg-red-500/20 rounded-xl p-4 border border-red-400/30">
+				<p class="text-sm text-red-200">
+					<strong>Fracaso de 1998:</strong> {indonesiaDeepDive.preReform.priorFailure1998}
+				</p>
+			</div>
+			<p class="text-sm text-slate-400 mt-4">
+				Fuente: <a href={indonesiaDeepDive.preReform.sourceUrl} target="_blank" rel="noopener" class="text-emerald-400 hover:underline">{indonesiaDeepDive.preReform.source}</a>
+			</p>
+		</div>
+
+		<!-- Timeline de la reforma -->
+		<h3 class="text-2xl font-bold text-emerald-300 mb-6">Cronología de la Reforma (2014-2015)</h3>
+		<div class="relative mb-12">
+			<div class="absolute left-4 top-0 bottom-0 w-0.5 bg-emerald-500/30"></div>
+			{#each indonesiaDeepDive.reform.timeline as event}
+				<div class="relative pl-12 pb-6 last:pb-0">
+					<div class="absolute left-2.5 top-1.5 w-3.5 h-3.5 rounded-full ring-2 {event.type === 'price' ? 'bg-red-500 ring-red-500/30' : event.type === 'social' ? 'bg-emerald-500 ring-emerald-500/30' : event.type === 'fiscal' ? 'bg-blue-500 ring-blue-500/30' : 'bg-yellow-500 ring-yellow-500/30'}"></div>
+					<div class="bg-white/5 rounded-lg p-4 border border-white/10">
+						<span class="text-xs font-mono {event.type === 'price' ? 'text-red-400' : event.type === 'social' ? 'text-emerald-400' : event.type === 'fiscal' ? 'text-blue-400' : 'text-yellow-400'}">{event.date}</span>
+						<p class="text-slate-200 mt-1">{event.event}</p>
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Programas de protección social -->
+		<h3 class="text-2xl font-bold text-emerald-300 mb-6">La Clave: Protección Social SIMULTÁNEA</h3>
+		<div class="bg-emerald-500/10 rounded-2xl p-6 border border-emerald-400/30 mb-8">
+			<p class="text-lg text-emerald-200 font-semibold mb-6">
+				"{indonesiaDeepDive.reform.socialProtection.keyDesign}"
+			</p>
+			<div class="grid md:grid-cols-3 gap-6">
+				{#each indonesiaDeepDive.reform.socialProtection.programs as program}
+					<div class="bg-white/10 rounded-xl p-5">
+						<h4 class="font-bold text-white text-lg mb-2">{program.name}</h4>
+						<div class="text-emerald-300 font-semibold mb-2">{program.beneficiaries}</div>
+						<div class="text-sm text-slate-300 mb-2">{program.description}</div>
+						<div class="text-xs text-emerald-400 font-mono">{program.value}</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+
+		<!-- Resultados fiscales -->
+		<div class="grid md:grid-cols-2 gap-8 mb-8">
+			<div class="bg-white/10 rounded-2xl p-6 border border-white/10">
+				<h3 class="text-xl font-bold text-emerald-300 mb-4">Ahorro Fiscal</h3>
+				<div class="text-center mb-4">
+					<div class="text-5xl font-black text-emerald-400">US$15.600M</div>
+					<div class="text-slate-300">ahorrados en subsidios</div>
+					<div class="text-emerald-200 font-semibold mt-1">{indonesiaDeepDive.reform.fiscalSavings.percentOfBudget}% del gasto total del gobierno</div>
+				</div>
+				<h4 class="font-bold text-slate-200 mb-3">Redirigidos a:</h4>
+				<ul class="space-y-2">
+					{#each indonesiaDeepDive.reform.fiscalSavings.reallocation as item}
+						<li class="flex items-start gap-2">
+							<span class="text-emerald-400 mt-1">&#8226;</span>
+							<div>
+								<span class="text-white font-semibold">{item.sector}:</span>
+								<span class="text-slate-300 text-sm"> {item.description}</span>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</div>
+			<div class="bg-white/10 rounded-2xl p-6 border border-white/10">
+				<h3 class="text-xl font-bold text-emerald-300 mb-4">Factores de Éxito</h3>
+				<ul class="space-y-4">
+					{#each indonesiaDeepDive.reform.successFactors as factor, i}
+						<li class="flex items-start gap-3">
+							<div class="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
+								{i + 1}
+							</div>
+							<span class="text-slate-200">{factor}</span>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		</div>
+
+		<!-- Advertencia: post-reforma -->
+		<div class="bg-amber-500/20 rounded-xl p-6 border border-amber-400/30">
+			<h3 class="font-bold text-amber-300 mb-2">Advertencia: Lo que pasó después (2017+)</h3>
+			<p class="text-slate-300">{indonesiaDeepDive.postReform.description}</p>
+			<p class="text-amber-200 mt-3 font-semibold text-sm">{indonesiaDeepDive.postReform.lesson}</p>
+			<p class="text-sm text-slate-400 mt-2">
+				Fuente: <a href={indonesiaDeepDive.postReform.sourceUrl} target="_blank" rel="noopener" class="text-emerald-400 hover:underline">{indonesiaDeepDive.postReform.source}</a>
+			</p>
+		</div>
+
+		<p class="text-sm text-slate-400 mt-6">
+			Fuentes principales:
+			<a href="https://documents1.worldbank.org/curated/en/099748505212431959/pdf/IDU1e31e5e531f16114baa1b62c1b3201c9c2e68.pdf" target="_blank" rel="noopener" class="text-emerald-400 hover:underline">World Bank</a> |
+			<a href="https://www.iisd.org/publications/report/indonesias-fuel-subsidies-action-plan-reform" target="_blank" rel="noopener" class="text-emerald-400 hover:underline">IISD</a> |
+			<a href="https://www.cambridge.org/core/books/politics-of-fossil-fuel-subsidies-and-their-reform/fossil-fuel-subsidy-reform-in-indonesia/69E6706F3ABFB80052B20E3772404138" target="_blank" rel="noopener" class="text-emerald-400 hover:underline">Cambridge</a>
+		</p>
+	</div>
+</section>
+
+<!-- ==================== SIMULACIÓN DE RECUPERACIÓN ==================== -->
+<section id="simulacion" class="py-20 bg-slate-100">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Simulación: Recuperación Fiscal</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-4"></div>
+
+		<!-- Disclaimer prominente -->
+		<div class="bg-red-50 border-2 border-red-300 rounded-2xl p-6 mb-8">
+			<div class="flex items-start gap-3">
+				<div class="text-3xl flex-shrink-0">&#9888;&#65039;</div>
+				<div>
+					<h3 class="font-bold text-red-800 text-lg mb-2">Aviso Importante</h3>
+					<p class="text-red-700">{recoveryEstimation.disclaimer}</p>
+					<p class="text-red-600 text-sm mt-2">
+						Los datos base provienen de fuentes oficiales (OCEC-UDP, La Tercera, Fastcheck), pero las proyecciones futuras son ejercicios ilustrativos.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Punto de partida -->
+		<div class="bg-slate-800 rounded-2xl p-8 text-white mb-8">
+			<h3 class="text-xl font-bold mb-4">Punto de partida de la simulación</h3>
+			<div class="grid md:grid-cols-3 gap-6">
+				<div class="text-center">
+					<div class="text-sm text-slate-400">Déficit acumulado (2014-mar 2026)</div>
+					<div class="text-3xl font-black text-red-400">US${Math.abs(recoveryEstimation.baseData.currentDeficit).toLocaleString('es-CL')}M</div>
+					<div class="text-xs text-slate-500 mt-1">Fuente: OCEC-UDP / La Tercera</div>
+				</div>
+				<div class="text-center">
+					<div class="text-sm text-slate-400">Proyección Q1 2026 completo</div>
+					<div class="text-3xl font-black text-red-400">US${Math.abs(recoveryEstimation.baseData.projectedQ12026).toLocaleString('es-CL')}M</div>
+					<div class="text-xs text-slate-500 mt-1">Fuente: Fastcheck</div>
+				</div>
+				<div class="text-center">
+					<div class="text-sm text-slate-400">Déficit total potencial</div>
+					<div class="text-3xl font-black text-red-500">US${Math.abs(recoveryEstimation.baseData.potentialTotalDeficit).toLocaleString('es-CL')}M</div>
+					<div class="text-xs text-slate-500 mt-1">Estimación IA</div>
+				</div>
+			</div>
+			<div class="mt-6 bg-white/5 rounded-lg p-4">
+				<p class="text-sm text-slate-300">
+					<strong>Dato histórico real:</strong> Tras la crisis de 2022, Chile recuperó US$603M en 3 años (2023: +$417M, 2024: +$72M, 2025: +$114M) = promedio de US$201M/año.
+				</p>
+			</div>
+		</div>
+
+		<!-- Gráfico de proyección -->
+		<div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8">
+			<ChartCanvas type="line" data={recoveryChartData} options={recoveryChartOptions} height="500px" />
+			<div class="mt-4 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+				<p class="text-sm text-yellow-800">
+					<strong>Nota:</strong> La línea de $0 representa el punto de equilibrio fiscal. Cuando una línea cruza $0, el MEPCO habría recuperado todo su déficit acumulado. Esta es una simulación lineal simplificada.
+				</p>
+			</div>
+		</div>
+
+		<!-- Escenarios detallados -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">4 Escenarios de Recuperación</h3>
+		<div class="grid md:grid-cols-2 gap-6 mb-12">
+			{#each recoveryEstimation.scenarios as scenario}
+				<div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+					<div class="flex items-center gap-3 mb-4">
+						<span class="text-3xl">{scenario.emoji}</span>
+						<div>
+							<h4 class="font-bold text-lg text-slate-900">{scenario.name}</h4>
+							<div class="text-sm font-mono" style="color: {scenario.color}">~US${scenario.annualSurplus}M/año</div>
+						</div>
+					</div>
+					<p class="text-slate-600 text-sm mb-4">{scenario.description}</p>
+
+					<div class="grid grid-cols-2 gap-3 mb-4">
+						<div class="bg-slate-50 rounded-lg p-3 text-center">
+							<div class="text-xs text-slate-500">Recuperar US$2.194M</div>
+							<div class="text-xl font-bold" style="color: {scenario.color}">{scenario.yearsToRecoverCurrent} años</div>
+						</div>
+						<div class="bg-slate-50 rounded-lg p-3 text-center">
+							<div class="text-xs text-slate-500">Recuperar US$3.794M</div>
+							<div class="text-xl font-bold" style="color: {scenario.color}">{scenario.yearsToRecoverWorst} años</div>
+						</div>
+					</div>
+
+					<h5 class="font-semibold text-slate-700 text-sm mb-2">Supuestos:</h5>
+					<ul class="space-y-1">
+						{#each scenario.assumptions as assumption}
+							<li class="text-xs text-slate-500 flex items-start gap-1">
+								<span class="text-slate-400">&#8226;</span>
+								{assumption}
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Alternativa gradual -->
+		<div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-8 border border-purple-200 mb-8">
+			<h3 class="text-xl font-bold text-purple-900 mb-3">{recoveryEstimation.alternativeApproach.title}</h3>
+			<p class="text-slate-700 mb-6">{recoveryEstimation.alternativeApproach.description}</p>
+
+			<div class="space-y-4 mb-6">
+				{#each recoveryEstimation.alternativeApproach.steps as step, i}
+					<div class="flex items-start gap-4">
+						<div class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold flex-shrink-0">
+							{i + 1}
+						</div>
+						<div class="bg-white rounded-lg p-4 flex-1 border border-purple-100">
+							<div class="font-semibold text-purple-900 mb-1">{step.action}</div>
+							<div class="text-sm text-slate-600">{step.impact}</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<div class="bg-white rounded-xl p-4 border border-purple-200">
+				<p class="text-sm text-slate-700">{recoveryEstimation.alternativeApproach.tradeoff}</p>
+			</div>
+			<p class="text-xs text-slate-500 mt-4 italic">{recoveryEstimation.alternativeApproach.note}</p>
+		</div>
+
+		<!-- Resumen final -->
+		<div class="bg-slate-800 rounded-2xl p-8 text-white">
+			<h3 class="text-xl font-bold mb-4">Resumen de la Simulación</h3>
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead>
+						<tr class="border-b border-slate-600">
+							<th class="py-2 px-3 text-left text-slate-400">Escenario</th>
+							<th class="py-2 px-3 text-center text-slate-400">Superávit/año</th>
+							<th class="py-2 px-3 text-center text-slate-400">Años (déficit actual)</th>
+							<th class="py-2 px-3 text-center text-slate-400">Años (peor caso)</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each recoveryEstimation.scenarios as s}
+							<tr class="border-b border-slate-700">
+								<td class="py-2 px-3 font-semibold">{s.emoji} {s.name}</td>
+								<td class="py-2 px-3 text-center font-mono" style="color: {s.color}">US${s.annualSurplus}M</td>
+								<td class="py-2 px-3 text-center font-bold">{s.yearsToRecoverCurrent}</td>
+								<td class="py-2 px-3 text-center font-bold">{s.yearsToRecoverWorst}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+			<div class="mt-4 bg-red-500/20 rounded-lg p-4 border border-red-400/30">
+				<p class="text-sm text-red-200">
+					<strong>Recordatorio:</strong> Estas son estimaciones de IA basadas en datos históricos. No consideran factores como: variación del tipo de cambio CLP/USD, elasticidad de la demanda de combustibles, crecimiento económico, cambios legislativos futuros, ni nuevas crisis geopolíticas.
+				</p>
+			</div>
+			<p class="text-sm text-slate-400 mt-4">
+				Fuentes de datos base:
+				<a href="https://www.latercera.com/pulso/noticia/costo-fiscal-del-mepco-supera-los-us2000-millones-desde-su-creacion-en-2014/" target="_blank" rel="noopener" class="text-orange-400 hover:underline">La Tercera / OCEC-UDP</a> |
+				<a href="https://www.fastcheck.cl/2026/03/24/este-jueves-chile-vivira-el-mayor-shock-de-precios-en-combustibles-en-36-anos/" target="_blank" rel="noopener" class="text-orange-400 hover:underline">Fastcheck</a>
+			</p>
+		</div>
+	</div>
+</section>
+
+<!-- ==================== ANÁLISIS MEDIDAS GOBIERNO ==================== -->
+<section id="analisis" class="py-20 bg-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Análisis: Las Medidas del Gobierno</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-4"></div>
+		<p class="text-slate-600 mb-8">Evaluación de las decisiones tomadas, las alternativas que existían, la capacidad fiscal de Chile, y el contexto geopolítico.</p>
+
+		<!-- Qué hizo el gobierno -->
+		<div class="bg-slate-800 rounded-2xl p-8 text-white mb-8">
+			<h3 class="text-2xl font-bold mb-4">¿Qué hizo el gobierno?</h3>
+			<div class="grid md:grid-cols-3 gap-6 mb-6">
+				{#each governmentAnalysis.measures.decree.result as r}
+					<div class="bg-white/10 rounded-xl p-4 text-center">
+						<div class="text-sm text-slate-400">{r.fuel}</div>
+						<div class="flex items-center justify-center gap-2 my-2">
+							<span class="text-slate-300">${r.before.toLocaleString('es-CL')}</span>
+							<span class="text-orange-400">&#8594;</span>
+							<span class="text-orange-300 font-bold">${r.after.toLocaleString('es-CL')}</span>
+						</div>
+						<div class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold inline-block">+${r.diff}/L ({r.pct}%)</div>
+					</div>
+				{/each}
+			</div>
+			<div class="bg-white/5 rounded-xl p-4 border border-white/10 mb-4">
+				<p class="text-orange-300 italic">"{governmentAnalysis.measures.decree.justification}"</p>
+			</div>
+			<p class="text-slate-300 text-sm">{governmentAnalysis.measures.decree.context}</p>
+			<div class="flex flex-wrap gap-2 mt-4">
+				{#each governmentAnalysis.measures.decree.sources as s}
+					<a href={s.url} target="_blank" rel="noopener" class="text-xs text-orange-400 hover:underline bg-white/5 px-2 py-1 rounded">{s.name}</a>
+				{/each}
+			</div>
+		</div>
+
+		<!-- Medidas compensatorias -->
+		<h3 class="text-xl font-bold text-slate-900 mb-4">"Plan Chile Sale Adelante" — Medidas compensatorias</h3>
+		<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+			{#each governmentAnalysis.measures.compensatory as m, i}
+				<div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+					<div class="flex items-center gap-2 mb-2">
+						<div class="w-7 h-7 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">{i + 1}</div>
+						<h4 class="font-semibold text-slate-900 text-sm">{m.name}</h4>
+					</div>
+					<p class="text-xs text-slate-600">{m.detail}</p>
+				</div>
+			{/each}
+		</div>
+		<p class="text-sm text-slate-500 mb-12">
+			Fuentes: {#each governmentAnalysis.measures.compensatorySources as s, i}{#if i > 0} | {/if}<a href={s.url} target="_blank" rel="noopener" class="text-orange-600 hover:underline">{s.name}</a>{/each}
+		</p>
+
+		<!-- Impacto inflacionario -->
+		<h3 class="text-xl font-bold text-slate-900 mb-4">Impacto Inflacionario Estimado</h3>
+		<div class="overflow-x-auto mb-12">
+			<table class="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200">
+				<thead class="bg-slate-800 text-white">
+					<tr>
+						<th class="px-4 py-3 text-left text-sm">Economista</th>
+						<th class="px-4 py-3 text-center text-sm">Con MEPCO modificado</th>
+						<th class="px-4 py-3 text-center text-sm">Sin MEPCO</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each governmentAnalysis.inflationImpact as row, i}
+						<tr class="{i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}">
+							<td class="px-4 py-2 text-slate-900">{row.economist}</td>
+							<td class="px-4 py-2 text-center font-mono text-amber-700">{row.withMepco}</td>
+							<td class="px-4 py-2 text-center font-mono text-red-700">{row.withoutMepco}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+		<p class="text-sm text-slate-500 mb-12">
+			Fuente: <a href={governmentAnalysis.inflationSource.url} target="_blank" rel="noopener" class="text-orange-600 hover:underline">{governmentAnalysis.inflationSource.name}</a>
+		</p>
+
+		<!-- ¿Podía Chile absorber el costo? -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">¿Podía Chile absorber el costo unos años más?</h3>
+		<div class="grid md:grid-cols-2 gap-8 mb-8">
+			<div class="bg-red-50 rounded-xl p-6 border border-red-200">
+				<h4 class="font-bold text-red-800 mb-4">Argumento: No, era insostenible</h4>
+				<ul class="space-y-3 text-sm text-slate-700">
+					<li class="flex items-start gap-2"><span class="text-red-500 font-bold mt-0.5">&#8226;</span>FEES tenía solo US${governmentAnalysis.fiscalCapacity.fees.balance.toLocaleString('es-CL')}M. Se agotaría en ~5 meses a US$200M/semana.</li>
+					<li class="flex items-start gap-2"><span class="text-red-500 font-bold mt-0.5">&#8226;</span>Recursos disponibles heredados: apenas US${governmentAnalysis.fiscalCapacity.availableResources}M.</li>
+					<li class="flex items-start gap-2"><span class="text-red-500 font-bold mt-0.5">&#8226;</span>Deuda pública: {governmentAnalysis.fiscalCapacity.debtToGDP.current}% del PIB, a solo {governmentAnalysis.fiscalCapacity.debtToGDP.headroom} puntos del ancla de {governmentAnalysis.fiscalCapacity.debtToGDP.anchor}%.</li>
+					<li class="flex items-start gap-2"><span class="text-red-500 font-bold mt-0.5">&#8226;</span>Déficit fiscal ya en {governmentAnalysis.fiscalCapacity.fiscalDeficit.pct2024}% del PIB (2024), meta 2026 de {governmentAnalysis.fiscalCapacity.fiscalDeficit.target2026}% probablemente incumplida.</li>
+					<li class="flex items-start gap-2"><span class="text-red-500 font-bold mt-0.5">&#8226;</span>En 15 de los últimos 17 años, el gasto público superó los ingresos (CIPER).</li>
+				</ul>
+			</div>
+			<div class="bg-green-50 rounded-xl p-6 border border-green-200">
+				<h4 class="font-bold text-green-800 mb-4">Argumento: Sí, pero de forma diferente</h4>
+				<ul class="space-y-3 text-sm text-slate-700">
+					<li class="flex items-start gap-2"><span class="text-green-500 font-bold mt-0.5">&#8226;</span>Fondos soberanos totales: US${governmentAnalysis.fiscalCapacity.totalSovereignFunds.toLocaleString('es-CL')}M. Suficiente para ~16 meses.</li>
+					<li class="flex items-start gap-2"><span class="text-green-500 font-bold mt-0.5">&#8226;</span>Goldman Sachs proyecta Brent bajando a ~US$70-80 para fin de 2026 si Ormuz reabre en 4-6 semanas.</li>
+					<li class="flex items-start gap-2"><span class="text-green-500 font-bold mt-0.5">&#8226;</span>Sin Ucrania (2022), el MEPCO era SUPERAVITARIO (+US$182M). El sistema funciona en condiciones normales.</li>
+					<li class="flex items-start gap-2"><span class="text-green-500 font-bold mt-0.5">&#8226;</span>Un ajuste gradual (duplicar variación semanal) habría reducido costo sin shock del 34%.</li>
+					<li class="flex items-start gap-2"><span class="text-green-500 font-bold mt-0.5">&#8226;</span>Chile mantiene rating A/A2 (S&P/Moody's, outlook estable). Podía emitir deuda a tasas competitivas.</li>
+				</ul>
+			</div>
+		</div>
+		<div class="flex flex-wrap gap-2 mb-12">
+			{#each governmentAnalysis.fiscalCapacity.sources as s}
+				<a href={s.url} target="_blank" rel="noopener" class="text-xs text-orange-600 hover:underline bg-orange-50 px-2 py-1 rounded">{s.name}</a>
+			{/each}
+		</div>
+
+		<!-- Alternativas -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">Alternativas que se Propusieron</h3>
+		<div class="space-y-4 mb-12">
+			{#each governmentAnalysis.alternatives as alt, i}
+				<div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:border-blue-300 transition-colors">
+					<div class="flex items-start gap-4">
+						<div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold flex-shrink-0">{i + 1}</div>
+						<div class="flex-1">
+							<div class="flex flex-wrap items-center gap-2 mb-1">
+								<h4 class="font-bold text-slate-900">{alt.name}</h4>
+								<span class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{alt.proponent}</span>
+							</div>
+							<p class="text-sm text-slate-600">{alt.description}</p>
+							{#if alt.sourceUrl}
+								<a href={alt.sourceUrl} target="_blank" rel="noopener" class="text-xs text-orange-500 hover:underline mt-1 inline-block">Fuente</a>
+							{/if}
+						</div>
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Contexto Irán y escenarios -->
+		<h3 class="text-2xl font-bold text-slate-900 mb-6">Contexto: La Guerra en Irán y el Estrecho de Ormuz</h3>
+		<div class="bg-gradient-to-br from-red-900 to-slate-900 rounded-2xl p-8 text-white mb-8">
+			<p class="text-red-200 mb-6">{governmentAnalysis.iranContext.hormuzFacts}</p>
+			<div class="relative mb-8">
+				<div class="absolute left-4 top-0 bottom-0 w-0.5 bg-red-500/30"></div>
+				{#each governmentAnalysis.iranContext.timeline as event}
+					<div class="relative pl-10 pb-4 last:pb-0">
+						<div class="absolute left-2.5 top-1.5 w-3.5 h-3.5 rounded-full bg-red-500 ring-2 ring-red-500/30"></div>
+						<span class="text-xs font-mono text-red-400">{event.date}</span>
+						<p class="text-slate-200 text-sm">{event.event}</p>
+					</div>
+				{/each}
+			</div>
+			<h4 class="font-bold text-red-300 mb-4">Proyecciones de Precio del Petróleo</h4>
+			<div class="grid md:grid-cols-3 gap-4">
+				{#each governmentAnalysis.iranContext.forecasts as f}
+					<div class="bg-white/10 rounded-xl p-4">
+						<div class="font-bold text-white text-sm mb-2">{f.source}</div>
+						<p class="text-xs text-slate-300">{f.forecast}</p>
+						<a href={f.url} target="_blank" rel="noopener" class="text-xs text-orange-400 hover:underline mt-2 inline-block">Fuente</a>
+					</div>
+				{/each}
+			</div>
+		</div>
+
+		<!-- Qué hacen otros países -->
+		<h3 class="text-xl font-bold text-slate-900 mb-4">¿Qué están haciendo otros países de la región?</h3>
+		<div class="grid md:grid-cols-2 gap-4">
+			{#each governmentAnalysis.otherCountries as c}
+				<div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+					<div class="flex items-center gap-2 mb-2">
+						<span class="text-2xl">{c.flag}</span>
+						<h4 class="font-bold text-slate-900">{c.country}</h4>
+					</div>
+					<p class="text-sm text-slate-600">{c.response}</p>
+					<a href={c.sourceUrl} target="_blank" rel="noopener" class="text-xs text-orange-500 hover:underline mt-2 inline-block">Fuente</a>
+				</div>
+			{/each}
+		</div>
+	</div>
+</section>
+
+<!-- ==================== CHILE-INDONESIA HIPOTÉTICO ==================== -->
+<section id="chile-indonesia" class="py-20 bg-gradient-to-br from-indigo-900 via-slate-900 to-emerald-900 text-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold mb-2">¿Y si Chile aplicara el modelo Indonesia?</h2>
+		<div class="w-20 h-1 bg-emerald-400 mb-4"></div>
+
+		<!-- Disclaimer -->
+		<div class="bg-red-500/20 border border-red-400/30 rounded-xl p-4 mb-8">
+			<p class="text-red-200 text-sm">{chileIndonesiaHypothetical.disclaimer}</p>
+		</div>
+
+		<!-- Tabla comparativa -->
+		<h3 class="text-2xl font-bold text-emerald-300 mb-4">Indonesia 2014 vs Chile 2026</h3>
+		<div class="overflow-x-auto mb-12">
+			<table class="w-full rounded-xl overflow-hidden">
+				<thead class="bg-white/10">
+					<tr>
+						{#each chileIndonesiaHypothetical.comparison.headers as h}
+							<th class="px-4 py-3 text-left text-sm text-slate-300">{h}</th>
+						{/each}
+					</tr>
+				</thead>
+				<tbody>
+					{#each chileIndonesiaHypothetical.comparison.rows as row, i}
+						<tr class="{i % 2 === 0 ? 'bg-white/5' : 'bg-transparent'}">
+							<td class="px-4 py-2 text-sm font-semibold text-slate-200">{row[0]}</td>
+							<td class="px-4 py-2 text-sm text-emerald-300">{row[1]}</td>
+							<td class="px-4 py-2 text-sm text-blue-300">{row[2]}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Regresividad -->
+		<h3 class="text-xl font-bold text-emerald-300 mb-4">El problema de fondo: el MEPCO es regresivo</h3>
+		<div class="grid md:grid-cols-3 gap-6 mb-12">
+			<div class="bg-white/10 rounded-xl p-6 text-center">
+				<div class="text-sm text-slate-400">Quintil más pobre (Q1)</div>
+				<div class="text-3xl font-black text-red-400">${chileIndonesiaHypothetical.regressivity.q1Benefit.toLocaleString('es-CL')}/mes</div>
+				<div class="text-xs text-slate-400">beneficio del subsidio MEPCO</div>
+				<div class="text-slate-500 mt-2">{chileIndonesiaHypothetical.regressivity.vehiclesQ1} autos/100 hogares</div>
+			</div>
+			<div class="bg-white/10 rounded-xl p-6 text-center flex flex-col items-center justify-center">
+				<div class="text-5xl font-black text-orange-400">{chileIndonesiaHypothetical.regressivity.ratio}x</div>
+				<div class="text-sm text-slate-300">más beneficio para los ricos</div>
+			</div>
+			<div class="bg-white/10 rounded-xl p-6 text-center">
+				<div class="text-sm text-slate-400">Quintil más rico (Q5)</div>
+				<div class="text-3xl font-black text-emerald-400">${chileIndonesiaHypothetical.regressivity.q5Benefit.toLocaleString('es-CL')}/mes</div>
+				<div class="text-xs text-slate-400">beneficio del subsidio MEPCO</div>
+				<div class="text-slate-500 mt-2">{chileIndonesiaHypothetical.regressivity.vehiclesQ5} autos/100 hogares</div>
+			</div>
+		</div>
+		<p class="text-sm text-slate-400 mb-12">
+			Fuente: <a href={chileIndonesiaHypothetical.regressivity.source.url} target="_blank" rel="noopener" class="text-emerald-400 hover:underline">{chileIndonesiaHypothetical.regressivity.source.name}</a>
+		</p>
+
+		<!-- Plan hipotético -->
+		<h3 class="text-2xl font-bold text-emerald-300 mb-6">{chileIndonesiaHypothetical.hypotheticalPlan.title}</h3>
+		<div class="space-y-6 mb-12">
+			{#each chileIndonesiaHypothetical.hypotheticalPlan.steps as step}
+				<div class="bg-white/5 rounded-xl p-6 border border-white/10">
+					<h4 class="font-bold text-lg text-emerald-300 mb-4">{step.phase}</h4>
+					<ul class="space-y-2">
+						{#each step.actions as action}
+							<li class="flex items-start gap-2 text-slate-200 text-sm">
+								<span class="text-emerald-400 mt-0.5">&#10003;</span>
+								{action}
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Matemática fiscal -->
+		<div class="bg-emerald-500/10 rounded-2xl p-8 border border-emerald-400/30 mb-12">
+			<h3 class="text-xl font-bold text-emerald-300 mb-4">La matemática fiscal</h3>
+			<div class="grid md:grid-cols-2 gap-8">
+				<div>
+					<h4 class="font-semibold text-red-300 mb-3">Costo actual (MEPCO universal)</h4>
+					<div class="text-4xl font-black text-red-400 mb-1">~US${(chileIndonesiaHypothetical.hypotheticalPlan.fiscalMath.currentMepcoCost / 1000).toFixed(0)}.000M/año</div>
+					<p class="text-sm text-slate-400">Al ritmo de marzo 2026. El 80% beneficia al 20% más rico.</p>
+				</div>
+				<div>
+					<h4 class="font-semibold text-emerald-300 mb-3">Costo alternativo (modelo Indonesia)</h4>
+					<div class="space-y-2 text-sm">
+						<div class="flex justify-between text-slate-200">
+							<span>Transferencia al 40% más pobre (3.6M hogares × $55.000/mes)</span>
+							<span class="font-mono text-emerald-300">US$2.400M</span>
+						</div>
+						<div class="flex justify-between text-slate-200">
+							<span>MEPCO solo para transporte público + kerosene</span>
+							<span class="font-mono text-emerald-300">US$800M</span>
+						</div>
+						<div class="flex justify-between text-white font-bold pt-2 border-t border-emerald-500/30">
+							<span>Total alternativo</span>
+							<span class="font-mono text-emerald-400">US$3.200M</span>
+						</div>
+						<div class="flex justify-between text-emerald-300 font-bold">
+							<span>Ahorro neto vs MEPCO actual</span>
+							<span class="font-mono">~US$2.800M/año</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Factibilidad -->
+		<h3 class="text-2xl font-bold text-emerald-300 mb-6">¿Es factible?</h3>
+		<div class="grid md:grid-cols-2 gap-8 mb-8">
+			<div class="bg-emerald-500/10 rounded-xl p-6 border border-emerald-400/30">
+				<h4 class="font-bold text-emerald-300 mb-4">A favor</h4>
+				<ul class="space-y-3">
+					{#each chileIndonesiaHypothetical.feasibility.favorable as f}
+						<li class="flex items-start gap-2">
+							<span class="text-emerald-400 flex-shrink-0 mt-0.5">&#10003;</span>
+							<div>
+								<span class="text-white font-semibold text-sm">{f.factor}</span>
+								<p class="text-xs text-slate-400">{f.detail}</p>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</div>
+			<div class="bg-red-500/10 rounded-xl p-6 border border-red-400/30">
+				<h4 class="font-bold text-red-300 mb-4">En contra</h4>
+				<ul class="space-y-3">
+					{#each chileIndonesiaHypothetical.feasibility.desfavorable as f}
+						<li class="flex items-start gap-2">
+							<span class="text-red-400 flex-shrink-0 mt-0.5">&#10007;</span>
+							<div>
+								<span class="text-white font-semibold text-sm">{f.factor}</span>
+								<p class="text-xs text-slate-400">{f.detail}</p>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		</div>
+
+		<!-- Veredicto -->
+		<div class="bg-white/10 rounded-2xl p-8 border border-white/20">
+			<h3 class="text-xl font-bold text-white mb-4">Veredicto</h3>
+			<p class="text-slate-200 leading-relaxed">{chileIndonesiaHypothetical.verdict}</p>
+		</div>
+
+		<div class="flex flex-wrap gap-2 mt-6">
+			{#each chileIndonesiaHypothetical.feasibility.sources as s}
+				<a href={s.url} target="_blank" rel="noopener" class="text-xs text-emerald-400 hover:underline bg-white/5 px-2 py-1 rounded">{s.name}</a>
+			{/each}
+			{#each chileIndonesiaHypothetical.comparison.sources as s}
+				<a href={s.url} target="_blank" rel="noopener" class="text-xs text-emerald-400 hover:underline bg-white/5 px-2 py-1 rounded">{s.name}</a>
+			{/each}
+		</div>
+	</div>
+</section>
+
+<!-- ==================== FUENTES ==================== -->
+<section id="fuentes" class="py-20 bg-white">
+	<div class="max-w-6xl mx-auto px-6">
+		<h2 class="text-4xl font-bold text-slate-900 mb-2">Fuentes y Referencias</h2>
+		<div class="w-20 h-1 bg-orange-500 mb-4"></div>
+		<p class="text-slate-600 mb-8">Todas las fuentes utilizadas en esta página, organizadas por categoría. Cada dato presentado tiene su fuente verificable.</p>
+
+		<div class="space-y-8">
+			{#each mainSources as category}
+				<div>
+					<h3 class="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+						<div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+						{category.category}
+					</h3>
+					<div class="grid md:grid-cols-2 gap-2">
+						{#each category.sources as src}
+							<a
+								href={src.url}
+								target="_blank"
+								rel="noopener"
+								class="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-orange-50 hover:border-orange-200 transition-colors group"
+							>
+								<svg class="w-4 h-4 text-slate-400 group-hover:text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+								</svg>
+								<span class="text-sm text-slate-700 group-hover:text-orange-700">{src.name}</span>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
+	</div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="bg-slate-900 text-slate-400 py-8">
+	<div class="max-w-6xl mx-auto px-6 text-center">
+		<p class="text-sm mb-2">
+			<strong class="text-white">MEPCO Chile</strong> - Guía informativa con fuentes oficiales verificables
+		</p>
+		<p class="text-xs">
+			Última actualización: Marzo 2026. Toda la información presentada cuenta con fuentes oficiales citadas.
+			Este sitio es informativo y no representa posición oficial de ninguna institución.
+		</p>
+	</div>
+</footer>
+
+</main>
+
+<style>
+	:global(html) {
+		scroll-behavior: smooth;
+		scroll-padding-top: 3.5rem;
+	}
+	:global(body) {
+		font-family: 'Inter', system-ui, sans-serif;
+	}
+</style>
