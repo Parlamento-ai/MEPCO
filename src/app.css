@@ -1,1 +1,21 @@
 @import 'tailwindcss';
+
+@theme {
+	/* Cherry Red (Primary Brand) - Parlamento.ai */
+	--color-cherry-50: #FEF2F2;
+	--color-cherry-100: #FDE8E9;
+	--color-cherry-200: #FACDD0;
+	--color-cherry-300: #F5A3A8;
+	--color-cherry-400: #E5636A;
+	--color-cherry-500: #BC2C34;
+	--color-cherry-600: #A12329;
+	--color-cherry-700: #871C22;
+	--color-cherry-800: #711A1E;
+	--color-cherry-900: #601919;
+	--color-cherry-950: #340A0C;
+
+	/* Font families */
+	--font-title: 'Host Grotesk', system-ui, sans-serif;
+	--font-sans: 'Public Sans', system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
