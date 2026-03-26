@@ -1755,11 +1755,17 @@
 <!-- ==================== FOOTER ==================== -->
 <footer class="bg-white border-t border-slate-200 py-10">
 	<div class="max-w-6xl mx-auto px-6">
-		<div class="flex flex-col md:flex-row items-center justify-between gap-6">
-			<div class="flex items-center gap-3">
-				<img src="https://parlamento.ai/brand/logo-orb-and-name.svg" alt="Parlamento.ai" class="h-6" />
+		<div class="flex flex-col md:flex-row items-start justify-between gap-8">
+			<div>
+				<a href="https://parlamento.ai" target="_blank" rel="noopener" class="inline-block mb-3">
+					<img src="https://parlamento.ai/brand/logo-orb-and-name.svg" alt="Parlamento.ai" class="h-6" />
+				</a>
+				<p class="text-sm text-slate-700 max-w-md">
+					Parlamento.ai es una plataforma de inteligencia legislativa que monitorea, analiza y traduce la actividad parlamentaria en informacion clara y accesible para ciudadanos, medios e investigadores.
+				</p>
+				<a href="https://parlamento.ai" target="_blank" rel="noopener" class="text-sm text-cherry-500 hover:underline mt-2 inline-block">parlamento.ai</a>
 			</div>
-			<div class="text-center md:text-right">
+			<div class="text-left md:text-right">
 				<p class="text-sm text-slate-700 mb-1">
 					Documento de investigacion. Fuentes oficiales verificables.
 				</p>
@@ -1767,9 +1773,6 @@
 					Ultima actualizacion: Marzo 2026. Este sitio es informativo y no representa posicion oficial de ninguna institucion.
 				</p>
 			</div>
-		</div>
-		<div class="mt-6 pt-6 border-t border-slate-100 text-center">
-			<p class="text-xs text-slate-400">Asistente inteligente de monitoreo legislativo</p>
 		</div>
 	</div>
 </footer>
